@@ -121,9 +121,14 @@
                 <img 
                   src={product.image} 
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${product.soldOut ? 'grayscale' : ''}`}
                 />
+                {/* Overlay suave al pasar el mouse */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                {/* Oscurecer si está vendido */}
+                {product.soldOut && (
+                  <div className="absolute inset-0 bg-black/40 transition-colors duration-300"></div>
+                )}
               </div>
 
               {/* Contenido */}
@@ -146,13 +151,15 @@
                         return (
                           <button
                             key={v.id}
-                            onClick={() => setSelectedVariant(v)}
+                            onClick={() => !product.soldOut && setSelectedVariant(v)}
+                            disabled={product.soldOut}
                             title={`${isBottle ? 'Botella' : 'Decant'} ${v.label}`}
                             className={`
                               px-3 py-1.5 text-[11px] uppercase tracking-widest border transition-all duration-200 rounded-none
                               ${isSelected 
                                 ? 'bg-amber-600 text-white border-amber-600 shadow-sm' 
                                 : 'bg-white text-gray-700 border-gray-200 hover:border-amber-600 hover:text-amber-700'}
+                              disabled:opacity-50 disabled:cursor-not-allowed
                               ${isBottle ? 'font-bold' : ''}
                             `}
                           >
@@ -170,11 +177,13 @@
                       <span key={selectedVariant.id} className="text-xl font-serif font-medium text-gray-900 animate-in fade-in">S/ {selectedVariant.price.toFixed(2)}</span>
                     </div>
                     <Button 
-                      onClick={() => onAddToCart(product, selectedVariant)}
-                      className="!px-5 !py-2.5 text-xs flex items-center gap-2 shadow-sm hover:shadow-md transition-transform active:scale-[0.98]"
+                      onClick={() => !product.soldOut && onAddToCart(product, selectedVariant)}
+                      disabled={product.soldOut}
+                      title={product.soldOut ? 'Producto vendido' : 'Agregar al carrito'}
+                      className="!px-5 !py-2.5 text-xs flex items-center gap-2 shadow-sm hover:shadow-md transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                     >
                       <ShoppingBag size={14} />
-                      Agregar
+                      {product.soldOut ? 'Vendido' : 'Agregar'}
                     </Button>
                   </div>
                 </div>

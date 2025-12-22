@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragancias Elegant’S</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración para Importar Módulos (React + Lucide) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+      }
+    }
+    </script>
+    
+    <!-- Babel para traducir JSX en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* Ajustes finos para scrollbar y selección */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d97706; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b45309; }
+    </style>
+</head>
+<body class="bg-white">
+    <div id="root"></div>
+
+    <script src="./products.js"></script>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { ShoppingBag, X, Search, Filter, Star, Phone, Instagram, Facebook, Tag, Package, Menu } from 'lucide-react';
+
+        // --- TRANSFORMAR PRODUCTOS AL FORMATO DEL CATÁLOGO ---
+        const CATALOG_DATABASE = window.products.map((product, index) => ({
+          id: `product-${product.id}`,
+          name: product.name,
+          brand: product.house,
+          category: product.category || "Árabes",
+          tags: product.soldOut ? ["VENDIDO"] : [],
+          description: product.description,
+          image: product.imgUrl,
+          soldOut: product.soldOut || false,
+          variants: [
+            ...(product.price3 ? [{ id: `var-${product.id}-3ml`, size: "3ml", label: "3ml", price: product.price3, type: "decant" }] : []),
+            ...(product.price5 ? [{ id: `var-${product.id}-5ml`, size: "5ml", label: "5ml", price: product.price5, type: "decant" }] : []),
+            ...(product.price10 ? [{ id: `var-${product.id}-10ml`, size: "10ml", label: "10ml", price: product.price10, type: "decant" }] : []),
+            ...(product.pricefull ? [{ id: `var-${product.id}-full`, size: "full", label: "Botella Completa 🍾", price: product.pricefull, type: "bottle" }] : []),
+          ]
+        }));
+
+        // --- COMPONENTES UI ---
+
+        const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
+          const baseStyle = "px-6 py-2 rounded-none transition-all duration-300 font-medium tracking-wide uppercase text-xs sm:text-sm";
+          const variants = {
+            primary: "bg-amber-600 text-white hover:bg-amber-700 border border-transparent",
+            secondary: "bg-transparent text-black border border-black hover:bg-black hover:text-white",
+            outline: "bg-transparent text-white border border-white hover:bg-white hover:text-black",
+            ghost: "bg-transparent text-gray-600 hover:text-amber-600"
+          };
+
+          return (
+            <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
+              {children}
+            </button>
+          );
+        };
+
+        const ProductCard = ({ product, onAddToCart }) => {
+          const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
+
+          useEffect(() => {
+            setSelectedVariant(product.variants[0]);
+          }, [product]);
+
+          return (
+            <div className="group bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden"
+              style={product.soldOut ? { opacity: 0.6, pointerEvents: 'none' } : {}}>
+              {/* Etiquetas (Tags) */}
+              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
+                <span className="bg-black text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
+                  {product.category}
+                </span>
+                {product.tags.includes('VENDIDO') && (
+                  <span className="bg-red-600 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
+                    Vendido
+                  </span>
+                )}
+              </div>
+
+              {/* Imagen */}
+              <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+                <img 
+                  src={product.image} 
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-5 flex flex-col flex-grow">
+                <div className="mb-2">
+                  <p className="text-amber-600 text-[10px] font-bold uppercase tracking-widest mb-1">{product.brand}</p>
+                  <h3 className="text-lg font-serif text-gray-900 leading-tight">{product.name}</h3>
+                </div>
+                
+                <p className="text-gray-500 text-xs mb-4 line-clamp-2">{product.description}</p>
+                
+                <div className="mt-auto space-y-4">
+                  {/* Selector de Variantes Dinámico */}
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 font-bold">Seleccionar presentación:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {product.variants.map((v) => {
+                        const isSelected = selectedVariant.id === v.id;
+                        const isBottle = v.type === 'bottle';
+                        
+                        return (
+                          <button
+                            key={v.id}
+                            onClick={() => setSelectedVariant(v)}
+                            className={`
+                              px-3 py-2 text-xs font-bold border transition-all duration-200 flex-1 min-w-[60px] text-center
+                              ${isSelected 
+                                ? 'border-amber-600 bg-amber-50 text-amber-900 ring-1 ring-amber-600' 
+                                : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900'}
+                              ${isBottle ? 'flex-[2_2_0%] border-amber-900/30' : ''} 
+                            `}
+                          >
+                            {isBottle && <Package size={10} className="inline mr-1 mb-0.5" />}
+                            {v.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-400 font-medium">Precio</span>
+                      <span className="text-xl font-serif font-medium text-gray-900">S/ {selectedVariant.price.toFixed(2)}</span>
+                    </div>
+                    <Button 
+                      onClick={() => onAddToCart(product, selectedVariant)}
+                      className="!px-5 !py-2.5 text-xs flex items-center gap-2 shadow-sm hover:shadow-md"
+                    >
+                      <ShoppingBag size={14} />
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, updateQuantity }) => {
+          const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          const phoneNumber = "51999999999"; 
+
+          const handleCheckout = () => {
+            let message = `*¡Hola Fragancias Elegant’S!* 👋\nQuisiera realizar el siguiente pedido:\n\n`;
+            cart.forEach(item => {
+              const typeLabel = item.variant.type === 'bottle' ? '🍾 Botella' : '🧪 Decant';
+              message += `▪️ ${item.name} | ${typeLabel} ${item.variant.size}\n   Cant: ${item.quantity} x S/ ${item.price} = S/ ${(item.price * item.quantity).toFixed(2)}\n`;
+            });
+            message += `\n*TOTAL A PAGAR: S/ ${total.toFixed(2)}*`;
+            message += `\n\nQuedo atento para coordinar el pago y envío. ¡Gracias!`;
+
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+          };
+
+          if (!isOpen) return null;
+
+          return (
+            <div className="fixed inset-0 z-50 flex justify-end">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose}></div>
+              
+              <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-neutral-900 text-white">
+                  <div className="flex items-center gap-3">
+                     <ShoppingBag size={20} className="text-amber-500" />
+                     <h2 className="text-xl font-serif tracking-wide">Tu Pedido</h2>
+                  </div>
+                  <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {cart.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
+                      <ShoppingBag size={64} className="opacity-20" />
+                      <p className="font-light">Tu carrito está esperando aromas increíbles.</p>
+                      <button onClick={onClose} className="text-amber-600 font-bold hover:underline text-sm uppercase tracking-widest">
+                        Volver al catálogo
+                      </button>
+                    </div>
+                  ) : (
+                    cart.map((item) => (
+                      <div key={`${item.id}-${item.variant.id}`} className="flex gap-4 animate-in fade-in duration-300">
+                        <div className="relative w-20 h-24 flex-shrink-0 bg-gray-50 border border-gray-100 overflow-hidden">
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          {item.variant.type === 'bottle' && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-amber-600 text-white text-[9px] text-center py-0.5 font-bold uppercase">
+                              Botella
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div>
+                            <h4 className="font-serif text-gray-900 leading-tight">{item.name}</h4>
+                            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">
+                              {item.variant.type === 'bottle' ? 'Botella Sellada' : 'Decant'} • {item.variant.size}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="font-bold text-amber-700">S/ {(item.price * item.quantity).toFixed(2)}</span>
+                            <div className="flex items-center border border-gray-200 bg-gray-50">
+                              <button 
+                                onClick={() => updateQuantity(item.id, item.variant.id, -1)}
+                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                              >-</button>
+                              <span className="w-8 text-center text-xs font-medium">{item.quantity}</span>
+                              <button 
+                                onClick={() => updateQuantity(item.id, item.variant.id, 1)}
+                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                              >+</button>
+                            </div>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => removeFromCart(item.id, item.variant.id)}
+                          className="text-gray-300 hover:text-red-500 self-start p-1 transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <div className="p-6 border-t border-gray-100 bg-gray-50">
+                    <div className="flex justify-between items-center mb-1 text-sm text-gray-500">
+                      <span>Subtotal</span>
+                      <span>S/ {total.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-6 text-xl font-serif text-gray-900 border-t border-gray-200 pt-3 mt-2 border-dashed">
+                      <span>Total Estimado</span>
+                      <span className="font-bold">S/ {total.toFixed(2)}</span>
+                    </div>
+                    
+                    <Button onClick={handleCheckout} className="w-full py-4 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 text-white border-none">
+                      <Phone size={20} />
+                      <span>Solicitar por WhatsApp</span>
+                    </Button>
+                    <p className="text-[10px] text-gray-400 mt-4 text-center mx-auto max-w-[250px]">
+                      Al hacer clic, se abrirá WhatsApp con el detalle de tu pedido para coordinar el pago.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // --- COMPONENTE PRINCIPAL (APP) ---
+        function App() {
+          const [cart, setCart] = useState([]);
+          const [isCartOpen, setIsCartOpen] = useState(false);
+          const [activeCategory, setActiveCategory] = useState('Todos');
+          const [priceRange, setPriceRange] = useState(200); 
+          const [searchTerm, setSearchTerm] = useState("");
+          const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+          const categories = ['Todos', ...new Set(CATALOG_DATABASE.map(p => p.category))];
+
+          const filteredProducts = useMemo(() => {
+            return CATALOG_DATABASE.filter(product => {
+              const matchesCategory = activeCategory === 'Todos' || product.category === activeCategory;
+              const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                    product.brand.toLowerCase().includes(searchTerm.toLowerCase());
+              const matchesPrice = product.variants.some(v => v.price <= priceRange);
+              
+              return matchesCategory && matchesSearch && matchesPrice;
+            });
+          }, [activeCategory, searchTerm, priceRange]);
+
+          const addToCart = (product, variant) => {
+            setCart(prev => {
+              const existing = prev.find(item => item.id === product.id && item.variant.id === variant.id);
+              if (existing) {
+                return prev.map(item => 
+                  (item.id === product.id && item.variant.id === variant.id)
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+                );
+              }
+              return [...prev, { ...product, variant, price: variant.price, quantity: 1 }];
+            });
+            setIsCartOpen(true);
+          };
+
+          const removeFromCart = (productId, variantId) => {
+            setCart(prev => prev.filter(item => !(item.id === productId && item.variant.id === variantId)));
+          };
+
+          const updateQuantity = (productId, variantId, change) => {
+            setCart(prev => prev.map(item => {
+              if (item.id === productId && item.variant.id === variantId) {
+                const newQty = Math.max(1, item.quantity + change);
+                return { ...item, quantity: newQty };
+              }
+              return item;
+            }));
+          };
+
+          return (
+            <div className="min-h-screen bg-white font-sans text-gray-800 selection:bg-amber-100 selection:text-amber-900">
+              
+              {/* Navbar */}
+              <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="flex justify-between items-center h-20">
+                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                      <div className="bg-black text-white p-2 font-serif text-xl tracking-widest border border-amber-600 transition-transform group-hover:scale-105">
+                        FE
+                      </div>
+                      <div className="flex flex-col -space-y-1">
+                        <span className="font-serif text-xl tracking-wide uppercase">Fragancias</span>
+                        <span className="text-[10px] text-amber-600 tracking-[0.3em] font-bold uppercase text-right">Elegant’S</span>
+                      </div>
+                    </div>
+
+                    <div className="hidden md:flex space-x-8 text-xs font-bold uppercase tracking-widest text-gray-500">
+                      <a href="#" className="hover:text-amber-600 transition-colors py-2">Inicio</a>
+                      <a href="#catalogo" className="hover:text-amber-600 transition-colors py-2">Catálogo</a>
+                      <a href="#nosotros" className="hover:text-amber-600 transition-colors py-2">Nosotros</a>
+                    </div>
+
+                    <div className="flex items-center gap-5">
+                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                         <Menu size={20} />
+                      </button>
+                      <div className="relative cursor-pointer group" onClick={() => setIsCartOpen(true)}>
+                        <ShoppingBag size={24} className="text-gray-800 group-hover:text-amber-600 transition-colors" />
+                        {cart.length > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm border border-white">
+                            {cart.reduce((a, b) => a + b.quantity, 0)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {isMobileMenuOpen && (
+                  <div className="md:hidden bg-white border-b border-gray-100 p-4 space-y-4 animate-in slide-in-from-top duration-200">
+                    <a href="#" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Inicio</a>
+                    <a href="#catalogo" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Catálogo</a>
+                    <a href="#nosotros" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Nosotros</a>
+                  </div>
+                )}
+              </nav>
+
+              {/* Hero Section */}
+              <div className="relative bg-neutral-900 text-white py-24 sm:py-36 overflow-hidden">
+                <div className="absolute inset-0">
+                   <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-600/10 rounded-full blur-[100px] transform translate-x-1/3 -translate-y-1/3"></div>
+                   <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-900/20 rounded-full blur-[100px] transform -translate-x-1/3 translate-y-1/3"></div>
+                </div>
+                
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+                  <div className="inline-block mb-6 px-4 py-1 border border-white/20 rounded-full bg-white/5 backdrop-blur-sm">
+                    <p className="text-amber-400 text-xs font-bold uppercase tracking-[0.2em]">Envíos a todo el Perú</p>
+                  </div>
+                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-medium mb-8 leading-tight tracking-tight">
+                    Aromas que <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 italic pr-2">definen</span>
+                  </h1>
+                  <p className="text-gray-400 max-w-2xl mx-auto mb-12 text-lg font-light leading-relaxed">
+                    Especialistas en <b>decants</b> y botellas de alta perfumería. Experimenta el lujo de Rasasi, Armani y Lattafa sin compromisos.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button variant="primary" className="!px-8 !py-4 !text-sm" onClick={() => document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth'})}>
+                      Ver Catálogo
+                    </Button>
+                    <Button variant="outline" className="!px-8 !py-4 !text-sm border-white/30 hover:border-white">
+                      Conocer Más
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <main id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                
+                <div className="flex flex-col lg:flex-row gap-16">
+                  {/* Sidebar Filters */}
+                  <aside className="w-full lg:w-64 space-y-10">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-100 pb-2">
+                        <Filter size={16} /> Filtros
+                      </h3>
+                      
+                      <div className="mb-8">
+                        <div className="relative">
+                          <input 
+                            type="text" 
+                            placeholder="Buscar perfume..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 focus:border-amber-600 focus:bg-white focus:outline-none text-sm transition-all"
+                          />
+                          <Search size={16} className="absolute left-3 top-3.5 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-serif text-lg text-gray-900 mb-4">Categorías</h4>
+                          <ul className="space-y-3">
+                            {categories.map(cat => (
+                              <li key={cat}>
+                                <button 
+                                  onClick={() => setActiveCategory(cat)}
+                                  className={`text-sm transition-all duration-200 flex items-center gap-2 ${activeCategory === cat ? 'text-amber-600 font-bold translate-x-2' : 'text-gray-500 hover:text-gray-900'}`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full ${activeCategory === cat ? 'bg-amber-600' : 'bg-gray-300'}`}></span>
+                                  {cat}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h4 className="font-serif text-lg text-gray-900 mb-4">Precio Máximo</h4>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex justify-between text-xs font-bold text-gray-900 mb-2">
+                              <span>S/ 20</span>
+                              <span>S/ {priceRange}</span>
+                            </div>
+                            <input 
+                              type="range" 
+                              min="20" 
+                              max="500"
+                              step="10"
+                              value={priceRange}
+                              onChange={(e) => setPriceRange(parseInt(e.target.value))}
+                              className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-2 text-center">Desliza para ajustar presupuesto</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </aside>
+
+                  {/* Product Grid */}
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row justify-between items-end mb-10 border-b border-gray-100 pb-6 gap-4">
+                      <div>
+                        <h2 className="text-4xl font-serif text-gray-900 mb-2">Colección</h2>
+                        <p className="text-gray-500 text-sm">Explora nuestra selección curada de fragancias.</p>
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest bg-gray-100 px-3 py-1 text-gray-600 rounded-full">
+                        {filteredProducts.length} Productos
+                      </span>
+                    </div>
+
+                    {filteredProducts.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+                        {filteredProducts.map(product => (
+                          <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-32 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <Search size={48} className="mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-serif text-gray-900 mb-2">No se encontraron resultados</h3>
+                        <p className="text-gray-500 text-sm mb-6">Intenta ajustar los filtros o el rango de precio.</p>
+                        <Button 
+                          onClick={() => {setActiveCategory('Todos'); setSearchTerm(''); setPriceRange(500);}}
+                          variant="ghost"
+                          className="text-xs"
+                        >
+                          Limpiar Filtros
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </main>
+
+              {/* Features Banner */}
+              <section className="bg-black text-white py-20 border-t border-white/10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                      <Star className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                      <h3 className="text-xl font-serif mb-3">Autenticidad 100%</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">Cada gota proviene directamente de la botella original. Sin adulteraciones, pura esencia.</p>
+                    </div>
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                      <ShoppingBag className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                      <h3 className="text-xl font-serif mb-3">Compra Simplificada</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">Olvídate de registros largos. Elige tus aromas y coordina todo rápidamente por WhatsApp.</p>
+                    </div>
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                      <Package className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                      <h3 className="text-xl font-serif mb-3">Decants & Botellas</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">Desde muestras de 5ml para probar, hasta la botella completa para tu colección personal.</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Footer */}
+              <footer id="nosotros" className="bg-neutral-900 text-white border-t border-white/10 pt-20 pb-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                    <div className="md:col-span-2">
+                      <div className="flex items-center gap-2 mb-6">
+                        <div className="bg-white text-black p-1 font-serif text-sm tracking-widest border border-amber-500">FE</div>
+                        <span className="font-serif text-xl tracking-wide uppercase">Fragancias Elegant’S</span>
+                      </div>
+                      <p className="text-gray-400 text-sm leading-relaxed max-w-md mb-8">
+                        Nacimos con la misión de hacer la alta perfumería accesible. Creemos que cada persona merece encontrar ese aroma que la define, sin necesidad de invertir en una botella completa a ciegas.
+                      </p>
+                      <div className="flex gap-4">
+                        <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-colors"><Instagram size={18}/></a>
+                        <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"><Facebook size={18}/></a>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-amber-500">Explorar</h4>
+                      <ul className="space-y-4 text-sm text-gray-400">
+                        <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Inicio</a></li>
+                        <li><a href="#catalogo" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Catálogo</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Nuestras Marcas</a></li>
+                      </ul>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-amber-500">Contacto</h4>
+                      <ul className="space-y-4 text-sm text-gray-400">
+                        <li className="flex items-start gap-3">
+                          <Phone size={18} className="mt-0.5 text-amber-600"/> 
+                          <span>+51 999 999 999<br/><span className="text-xs text-gray-500">Lun - Sab, 9am - 8pm</span></span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <ShoppingBag size={18} className="mt-0.5 text-amber-600"/> 
+                          <span>Ventas Online<br/><span className="text-xs text-gray-500">Envíos a todo el país</span></span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+                    <p>&copy; 2024 Fragancias Elegant’S. Todos los derechos reservados.</p>
+                    <div className="flex gap-6 mt-4 md:mt-0">
+                      <a href="#" className="hover:text-white">Privacidad</a>
+                      <a href="#" className="hover:text-white">Términos</a>
+                    </div>
+                  </div>
+                </div>
+              </footer>
+
+              <CartDrawer 
+                isOpen={isCartOpen} 
+                onClose={() => setIsCartOpen(false)} 
+                cart={cart}
+                removeFromCart={removeFromCart}
+                updateQuantity={updateQuantity}
+              />
+            </div>
+          );
+        }
+
+        // --- RENDERIZADO EN EL DOM ---
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

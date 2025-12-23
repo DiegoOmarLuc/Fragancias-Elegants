@@ -162,7 +162,7 @@ const products = [
         category: "Árabes",
         description: "Un aroma moderno y cautivador. Fusión de especias y maderas con un aire de sofisticación urbana.",
         notes: "Notas: Bergamota, Manzana, Jengibre, Salvia, Haba Tonka.",
-        price5: 30, 
+        price5: 35, 
         price10: 45, 
         imgUrl: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fperfumescardales.com.ar%2Fwp-content%2Fuploads%2F2024%2F12%2Fspectra-1.jpg&f=1&nofb=1&ipt=606e7dc2d8b36fd5e9963fc66f9727d02b4eaf149313c542995ffca19ada431f",
         imgColor: "#455a64",
@@ -181,8 +181,8 @@ const products = [
         category: "Árabes",
         description: "La mezcla perfecta entre lo limpio y lo seductor. Inspirado en los grandes éxitos de la perfumería actual.",
         notes: "Notas: Pimienta Rosa, Bergamota, Lavanda, Elemi, Vetiver.",
-        price5: 30, 
-        price10: 45, 
+        price5: 45, 
+        price10: 65, 
         imgUrl: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fperfumepalace.pk%2Fwp-content%2Fuploads%2Farmaf-club-de-nuit-urban-man-elixir-eau-de-parfum_CQkAPN.webp&f=1&nofb=1&ipt=03674796cb99047c241e98b729481b8369eebac844ac833917855955ad701156",
         imgColor: "#212121",
         accordBars: [
@@ -201,7 +201,7 @@ const products = [
         description: "El rey del hype. Un aroma denso, especiado y oscuro que proyecta una personalidad imponente.",
         notes: "Notas: Pimienta Negra, Piña, Tabaco, Vainilla, Ámbar.",
         price5: 30, 
-        price10: 35, 
+        price10: 45, 
         imgUrl: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.myperfumeshop.co.nz%2Fcdn%2Fshop%2Ffiles%2FLattafa_Asad_EDP_-_Google_Search_-_il_fullxfull.5007811642_jcx1.jpg%3Fv%3D1702038815%26width%3D2048&f=1&nofb=1&ipt=9c66fedeca30bc53bdb72deb3a278c7b4604769dced5d0c4dbb1bd6e2afbdcc5",
         imgColor: "#1a1a1a",
         accordBars: [

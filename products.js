@@ -94,48 +94,48 @@ const products = [
             { name: "Canela", color: "#d35400", width: 60 }
         ]
     },
-    { 
-        id: 6, 
-        name: "Club de Nuit Intense", 
-        house: "Armaf",
-        category: "Árabes",
-        description: "Potencia bruta. Salida cítrica explosiva con un secado ahumado que deja huella.",
-        notes: "Notas: Limón, Piña, Grosella Negra, Abedul, Almizcler.",
-        price5: 20, 
-        price10: 35, 
-        soldOut: true,
-        imgUrl: "https://aztra.pe/cdn/shop/files/61c7p6Q4PiL._SL1200.jpg?v=1737735536&width=1000",
-        imgColor: "#333333",
-        accordBars: [
-            { name: "Cítrico", color: "#f1c40f", width: 100 },
-            { name: "Amaderado", color: "#5d4037", width: 85 },
-            { name: "Afrutado", color: "#c0392b", width: 80 },
-            { name: "Cuero", color: "#34495e", width: 70 },
-            { name: "Ahumado", color: "#7f8c8d", width: 60 }
-        ]
-    },
-    { 
-        id: 8, 
-        name: "Vintage Radio", 
-        house: "Lattafa",
-        category: "Árabes",
-        description: "Elegancia relajante y sofisticada. Una mezcla cremosa de ciruela madura y palo santo que proyecta calma y distinción.",
-        notes: "Notas: Ciruela, Palo Santo, Lavanda, Pimienta Negra, Sándalo.",
-        price3: 25,
-        price5: 40, 
-        price10: 56, 
-        pricefull: 180, 
-        soldOut: true,
-        imgUrl: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprivateblends.com.au%2Fcdn%2Fshop%2Ffiles%2Fvintage-radio-lattafa-pride-middle-eastern-perfumes-australia-private-blends.jpg%3Fv%3D1701837861%26width%3D1200&f=1&nofb=1&ipt=c7c7c80a9d3086431b9c2d11c61902b6d0bbe2172085c2f3b879e42345121737",
-        imgColor: "#8D6E63",
-        accordBars: [
-            { name: "Amaderado", color: "#5d4037", width: 95 },
-            { name: "Afrutado", color: "#8e44ad", width: 90 },
-            { name: "Aromático", color: "#27ae60", width: 75 },
-            { name: "Especiado", color: "#d35400", width: 60 },
-            { name: "Atalcado", color: "#bdc3c7", width: 50 }
-        ]
-    },
+    // { 
+    //     id: 6, 
+    //     name: "Club de Nuit Intense", 
+    //     house: "Armaf",
+    //     category: "Árabes",
+    //     description: "Potencia bruta. Salida cítrica explosiva con un secado ahumado que deja huella.",
+    //     notes: "Notas: Limón, Piña, Grosella Negra, Abedul, Almizcler.",
+    //     price5: 20, 
+    //     price10: 35, 
+    //     soldOut: true,
+    //     imgUrl: "https://aztra.pe/cdn/shop/files/61c7p6Q4PiL._SL1200.jpg?v=1737735536&width=1000",
+    //     imgColor: "#333333",
+    //     accordBars: [
+    //         { name: "Cítrico", color: "#f1c40f", width: 100 },
+    //         { name: "Amaderado", color: "#5d4037", width: 85 },
+    //         { name: "Afrutado", color: "#c0392b", width: 80 },
+    //         { name: "Cuero", color: "#34495e", width: 70 },
+    //         { name: "Ahumado", color: "#7f8c8d", width: 60 }
+    //     ]
+    // },
+    // { 
+    //     id: 8, 
+    //     name: "Vintage Radio", 
+    //     house: "Lattafa",
+    //     category: "Árabes",
+    //     description: "Elegancia relajante y sofisticada. Una mezcla cremosa de ciruela madura y palo santo que proyecta calma y distinción.",
+    //     notes: "Notas: Ciruela, Palo Santo, Lavanda, Pimienta Negra, Sándalo.",
+    //     price3: 25,
+    //     price5: 40, 
+    //     price10: 56, 
+    //     pricefull: 180, 
+    //     soldOut: true,
+    //     imgUrl: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprivateblends.com.au%2Fcdn%2Fshop%2Ffiles%2Fvintage-radio-lattafa-pride-middle-eastern-perfumes-australia-private-blends.jpg%3Fv%3D1701837861%26width%3D1200&f=1&nofb=1&ipt=c7c7c80a9d3086431b9c2d11c61902b6d0bbe2172085c2f3b879e42345121737",
+    //     imgColor: "#8D6E63",
+    //     accordBars: [
+    //         { name: "Amaderado", color: "#5d4037", width: 95 },
+    //         { name: "Afrutado", color: "#8e44ad", width: 90 },
+    //         { name: "Aromático", color: "#27ae60", width: 75 },
+    //         { name: "Especiado", color: "#d35400", width: 60 },
+    //         { name: "Atalcado", color: "#bdc3c7", width: 50 }
+    //     ]
+    // },
     { 
         id: 9, 
         name: "Odyssey Aqua", 

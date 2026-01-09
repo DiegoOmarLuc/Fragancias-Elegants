@@ -94,26 +94,26 @@ const products = [
             { name: "Canela", color: "#d35400", width: 60 }
         ]
     },
-    { 
-        id: 6, 
-        name: "Club de Nuit Intense", 
-        house: "Armaf",
-        category: "Árabes",
-        description: "Potencia bruta. Salida cítrica explosiva con un secado ahumado que deja huella.",
-        notes: "Notas: Limón, Piña, Grosella Negra, Abedul, Almizcler.",
-        price5: 20, 
-        price10: 35, 
-        soldOut: true,
-        imgUrl: "https://aztra.pe/cdn/shop/files/61c7p6Q4PiL._SL1200.jpg?v=1737735536&width=1000",
-        imgColor: "#333333",
-        accordBars: [
-            { name: "Cítrico", color: "#f1c40f", width: 100 },
-            { name: "Amaderado", color: "#5d4037", width: 85 },
-            { name: "Afrutado", color: "#c0392b", width: 80 },
-            { name: "Cuero", color: "#34495e", width: 70 },
-            { name: "Ahumado", color: "#7f8c8d", width: 60 }
-        ]
-    },
+    // { 
+    //     id: 6, 
+    //     name: "Club de Nuit Intense", 
+    //     house: "Armaf",
+    //     category: "Árabes",
+    //     description: "Potencia bruta. Salida cítrica explosiva con un secado ahumado que deja huella.",
+    //     notes: "Notas: Limón, Piña, Grosella Negra, Abedul, Almizcler.",
+    //     price5: 20, 
+    //     price10: 35, 
+    //     soldOut: true,
+    //     imgUrl: "https://aztra.pe/cdn/shop/files/61c7p6Q4PiL._SL1200.jpg?v=1737735536&width=1000",
+    //     imgColor: "#333333",
+    //     accordBars: [
+    //         { name: "Cítrico", color: "#f1c40f", width: 100 },
+    //         { name: "Amaderado", color: "#5d4037", width: 85 },
+    //         { name: "Afrutado", color: "#c0392b", width: 80 },
+    //         { name: "Cuero", color: "#34495e", width: 70 },
+    //         { name: "Ahumado", color: "#7f8c8d", width: 60 }
+    //     ]
+    // },
     // { 
     //     id: 8, 
     //     name: "Vintage Radio", 

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fragancias Elegant’S</title>
     
     <!-- Tailwind CSS -->
@@ -29,6 +29,11 @@
         ::-webkit-scrollbar-thumb { background: #d97706; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #b45309; }
 
+        /* Evitar highlight azul en Android al tocar botones (aplica a móviles) */
+        @media (max-width: 1069px) {
+            * { -webkit-tap-highlight-color: transparent; }
+        }
+
         /* Animaciones y transiciones globales */
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -49,25 +54,25 @@
         .animate-in.slide-in-from-top { animation: slideInTop 300ms ease-out forwards; }
     </style>
 </head>
-<body class="bg-white">
+<body class="bg-gray-50 sm:bg-white min-[1070px]:bg-white">
     <div id="root"></div>
 
-    <script src="./products.js?v=20260224"></script>
+    <!-- Tu archivo real de productos -->
+    <script src="./products.js?v=20260225"></script>
+    
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { ShoppingBag, X, Search, Filter, Star, Phone, Instagram, Facebook, Tag, Package, Menu } from 'lucide-react';
+        import { ShoppingBag, ShoppingCart, X, Search, Filter, Star, Phone, Instagram, Facebook, Tag, Package, Menu } from 'lucide-react';
 
         // --- TRANSFORMAR PRODUCTOS AL FORMATO DEL CATÁLOGO ---
         const CATALOG_DATABASE = window.products.map((product, index) => {
-          // construir variantes respetando precios 0 (hasOwnProperty)
           const variants = [];
           if (product.hasOwnProperty('price3')) variants.push({ id: `var-${product.id}-3ml`, size: "3ml", label: "3ml", price: product.price3, type: "decant" });
           if (product.hasOwnProperty('price5')) variants.push({ id: `var-${product.id}-5ml`, size: "5ml", label: "5ml", price: product.price5, type: "decant" });
           if (product.hasOwnProperty('price10')) variants.push({ id: `var-${product.id}-10ml`, size: "10ml", label: "10ml", price: product.price10, type: "decant" });
           if (product.hasOwnProperty('pricefull')) variants.push({ id: `var-${product.id}-full`, size: "full", label: "Botella Completa 🍾", price: product.pricefull, type: "bottle" });
 
-          // si es comingSoon y no tiene variantes, añadir placeholder para evitar errores en la UI
           if ((product.comingSoon || false) && variants.length === 0) {
             variants.push({ id: `var-${product.id}-soon`, size: "-", label: "Próximamente", price: 0, type: "decant" });
           }
@@ -77,7 +82,6 @@
             name: product.name,
             brand: product.house,
             category: product.category || "Árabes",
-            // soporta etiquetas dinámicas: VENDIDO y PRÓXIMAMENTE
             tags: [ ...(product.soldOut ? ["VENDIDO"] : []), ...(product.comingSoon ? ["PRÓXIMAMENTE"] : []) ],
             comingSoon: product.comingSoon || false,
             description: product.description,
@@ -90,12 +94,13 @@
         // --- COMPONENTES UI ---
 
         const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
-          const baseStyle = "px-6 py-2 rounded-none transition-all duration-300 font-medium tracking-wide uppercase text-xs sm:text-sm";
+          // Si es >=1070px, vuelve al 'rounded-none', elimina flex y gap si no es deseado, pero los mantenemos para alinear íconos
+          const baseStyle = "px-6 py-2 rounded-xl min-[1070px]:rounded-none transition-all duration-300 font-medium tracking-wide uppercase text-xs sm:text-sm flex items-center justify-center gap-2 min-[1070px]:inline-block min-[1070px]:flex-none min-[1070px]:text-center";
           const variants = {
-            primary: "bg-amber-600 text-white hover:bg-amber-700 border border-transparent",
-            secondary: "bg-transparent text-black border border-black hover:bg-black hover:text-white",
+            primary: "bg-amber-600 text-white hover:bg-amber-700 shadow-md min-[1070px]:shadow-none shadow-amber-600/20 active:scale-[0.98] min-[1070px]:active:scale-100 border border-transparent",
+            secondary: "bg-white min-[1070px]:bg-transparent text-gray-900 min-[1070px]:text-black border border-gray-200 min-[1070px]:border-black hover:border-amber-600 min-[1070px]:hover:bg-black hover:text-amber-600 min-[1070px]:hover:text-white active:scale-[0.98] min-[1070px]:active:scale-100",
             outline: "bg-transparent text-white border border-white hover:bg-white hover:text-black",
-            ghost: "bg-transparent text-gray-600 hover:text-amber-600"
+            ghost: "bg-transparent text-gray-600 hover:text-amber-600 hover:bg-amber-50 min-[1070px]:hover:bg-transparent"
           };
 
           return (
@@ -115,55 +120,56 @@
           const isDisabled = product.soldOut || product.comingSoon;
 
             return (
-            <div data-product-card className="group bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden animate-in fade-in"
-              style={product.soldOut ? { opacity: 0.6, pointerEvents: 'none' } : (product.comingSoon ? { opacity: 0.85 } : {})}>
+            <div data-product-card className="group bg-white border border-gray-100 sm:border-gray-100/60 min-[1070px]:border-gray-100 rounded-2xl sm:rounded-[20px] min-[1070px]:rounded-none shadow-sm min-[1070px]:shadow-none hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden animate-in fade-in"
+              style={product.soldOut ? { opacity: 0.65, pointerEvents: 'none' } : (product.comingSoon ? { opacity: 0.85 } : {})}>
+              
               {/* Etiquetas (Tags) */}
-              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
-                <span className="bg-black text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col gap-1.5 min-[1070px]:gap-2 items-start">
+                <span className="bg-black/90 min-[1070px]:bg-black backdrop-blur-sm min-[1070px]:backdrop-blur-none text-white text-[8px] sm:text-[10px] min-[1070px]:text-[10px] px-2 py-1 rounded-md min-[1070px]:rounded-none uppercase tracking-widest font-bold shadow-sm min-[1070px]:shadow-none">
                   {product.category}
                 </span>
                 {product.tags.map((t) => {
                   if (t === 'VENDIDO') return (
-                    <span key={t} className="bg-red-600 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">Vendido</span>
+                    <span key={t} className="bg-red-600 text-white text-[8px] sm:text-[10px] px-2 py-1 rounded-md min-[1070px]:rounded-none uppercase tracking-widest font-bold shadow-sm min-[1070px]:shadow-none min-[1070px]:uppercase">Vendido</span>
                   );
                   if (t === 'PRÓXIMAMENTE' || t === 'PROXIMAMENTE' || t === 'PRÓXIMO') return (
-                    <span key={t} className="bg-amber-500 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">Próximamente</span>
+                    <span key={t} className="bg-amber-500 text-white text-[8px] sm:text-[10px] px-2 py-1 rounded-md min-[1070px]:rounded-none uppercase tracking-widest font-bold shadow-sm min-[1070px]:shadow-none min-[1070px]:uppercase">Próximamente</span>
                   );
                   return (
-                    <span key={t} className="bg-gray-800 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">{t}</span>
+                    <span key={t} className="bg-gray-800 text-white text-[8px] sm:text-[10px] px-2 py-1 rounded-md min-[1070px]:rounded-none uppercase tracking-widest font-bold shadow-sm min-[1070px]:shadow-none">{t}</span>
                   );
                 })}
               </div>
 
               {/* Imagen */}
-              <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+              <div className="relative aspect-[4/5] sm:aspect-square min-[1070px]:aspect-[4/5] overflow-hidden bg-gray-100/50 min-[1070px]:bg-gray-50">
                 <img 
                   src={product.image} 
                   alt={product.name}
+                  loading="lazy"
                   className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${product.soldOut ? 'grayscale' : ''}`}
                 />
-                {/* Overlay suave al pasar el mouse */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                {/* Oscurecer si está vendido */}
+                {/* Oscurecer si está vendido en versión original */}
                 {product.soldOut && (
-                  <div className="absolute inset-0 bg-black/40 transition-colors duration-300"></div>
+                  <div className="absolute inset-0 bg-transparent min-[1070px]:bg-black/40 transition-colors duration-300"></div>
                 )}
               </div>
 
               {/* Contenido */}
-              <div className="p-5 flex flex-col flex-grow">
+              <div className="p-3 sm:p-5 min-[1070px]:p-5 flex flex-col flex-grow">
                 <div className="mb-2">
-                  <p className="text-amber-600 text-[10px] font-bold uppercase tracking-widest mb-1">{product.brand}</p>
-                  <h3 className="text-lg font-serif text-gray-900 leading-tight">{product.name}</h3>
+                  <p className="text-amber-600 text-[9px] sm:text-[10px] min-[1070px]:text-[10px] font-bold uppercase tracking-widest mb-0.5 sm:mb-1 min-[1070px]:mb-1">{product.brand}</p>
+                  <h3 className="text-sm sm:text-lg min-[1070px]:text-lg font-serif text-gray-900 leading-tight line-clamp-2 min-[1070px]:line-clamp-none">{product.name}</h3>
                 </div>
                 
-                <p className="text-gray-500 text-xs mb-4 line-clamp-2">{product.description}</p>
+                {/* Oculta la descripción en móvil, visible en escritorio */}
+                <p className="hidden sm:block text-gray-500 text-xs mb-4 line-clamp-2 mt-1 min-[1070px]:mt-0">{product.description}</p>
                 
-                <div className="mt-auto space-y-4">
-                  {/* Selector de Variantes Dinámico */}
+                <div className="mt-auto space-y-3 sm:space-y-4 pt-1 sm:pt-0 min-[1070px]:space-y-4">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 font-bold">Seleccionar presentación:</p>
-                    <div className="flex flex-wrap gap-2">
+                    <p className="hidden min-[1070px]:block text-[10px] text-gray-400 uppercase tracking-wider mb-2 font-bold">Seleccionar presentación:</p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 min-[1070px]:gap-2">
                       {product.variants.map((v) => {
                         const isSelected = selectedVariant.id === v.id;
                         const isBottle = v.type === 'bottle';
@@ -174,15 +180,16 @@
                             disabled={isDisabled}
                             title={`${isBottle ? 'Botella' : 'Decant'} ${v.label}`}
                             className={`
-                              px-3 py-1.5 text-[11px] uppercase tracking-widest border transition-all duration-200 rounded-none
+                              px-2 sm:px-3 min-[1070px]:px-3 py-1.5 text-[10px] sm:text-[11px] min-[1070px]:text-[11px] uppercase tracking-wider min-[1070px]:tracking-widest border transition-all duration-200 rounded-lg min-[1070px]:rounded-none flex-1 min-w-[32px] sm:flex-none
                               ${isSelected 
-                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm' 
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-amber-600 hover:text-amber-700'}
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-600/20 min-[1070px]:shadow-none' 
+                                : 'bg-gray-50 min-[1070px]:bg-white text-gray-600 min-[1070px]:text-gray-700 border-gray-200 hover:border-amber-600 min-[1070px]:hover:border-amber-600 hover:bg-amber-50 min-[1070px]:hover:bg-white min-[1070px]:hover:text-amber-700'}
                               disabled:opacity-50 disabled:cursor-not-allowed
-                              ${isBottle ? 'font-bold' : ''}
+                              ${isBottle ? 'font-bold' : 'font-medium min-[1070px]:font-normal'}
                             `}
                           >
-                            {isBottle && <Package size={12} className="inline mr-1 -mt-0.5" />}
+                            {isBottle && <Package size={10} className="inline mr-1 -mt-0.5 sm:hidden min-[1070px]:hidden" />}
+                            {isBottle && <Package size={12} className="hidden sm:inline min-[1070px]:inline mr-1 -mt-0.5" />}
                             {v.label}
                           </button>
                         );
@@ -190,19 +197,22 @@
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-400 font-medium">Precio</span>
-                      <span key={selectedVariant.id} className="text-xl font-serif font-medium text-gray-900 animate-in fade-in">S/ {selectedVariant.price.toFixed(2)}</span>
+                  <div className="flex flex-col sm:flex-row min-[1070px]:flex-row items-stretch sm:items-center min-[1070px]:items-center justify-between gap-3 sm:gap-0 min-[1070px]:gap-0 pt-3 min-[1070px]:pt-4 border-t border-gray-100">
+                    <div className="flex flex-row justify-between items-center sm:flex-col sm:items-start min-[1070px]:flex-col min-[1070px]:items-start px-1 sm:px-0 min-[1070px]:px-0">
+                      <span className="text-[10px] sm:text-xs min-[1070px]:text-xs text-gray-400 font-medium uppercase tracking-wider hidden sm:block min-[1070px]:block">Precio</span>
+                      <span className="text-xs text-gray-500 sm:hidden min-[1070px]:hidden">Total:</span>
+                      <span key={selectedVariant.id} className="text-base sm:text-xl min-[1070px]:text-xl font-serif font-bold min-[1070px]:font-medium text-gray-900 animate-in fade-in">S/ {selectedVariant.price.toFixed(2)}</span>
                     </div>
                     <Button 
                       onClick={() => !isDisabled && onAddToCart(product, selectedVariant)}
                       disabled={isDisabled}
                       title={product.soldOut ? 'Producto vendido' : (product.comingSoon ? 'Próximamente' : 'Agregar al carrito')}
-                      className="!px-5 !py-2.5 text-xs flex items-center gap-2 shadow-sm hover:shadow-md transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                      className="w-full sm:w-auto min-[1070px]:w-auto !py-2.5 min-[1070px]:!py-2.5 !px-4 min-[1070px]:!px-5 text-xs shadow-none sm:shadow-md min-[1070px]:shadow-none min-[1070px]:flex min-[1070px]:items-center min-[1070px]:gap-2 min-[1070px]:rounded-none transition-transform active:scale-[0.98] min-[1070px]:hover:shadow-md min-[1070px]:active:scale-[0.98]"
                     >
-                      <ShoppingBag size={14} />
-                      {product.soldOut ? 'Vendido' : (product.comingSoon ? 'Próximamente' : 'Agregar')}
+                      <ShoppingBag size={14} className={product.soldOut || product.comingSoon ? "opacity-50 min-[1070px]:opacity-100" : "min-[1070px]:opacity-100"} />
+                      <span className="font-bold min-[1070px]:font-normal tracking-wider min-[1070px]:tracking-normal">
+                        {product.soldOut ? 'Vendido' : (product.comingSoon ? 'Próximamente' : 'Agregar')}
+                      </span>
                     </Button>
                   </div>
                 </div>
@@ -219,7 +229,7 @@
             let message = `*¡Hola Fragancias Elegant’S!* 👋\nQuisiera realizar el siguiente pedido:\n\n`;
             cart.forEach(item => {
               const typeLabel = item.variant.type === 'bottle' ? '🍾 Botella' : '🧪 Decant';
-              message += `▪️ ${item.name} | ${typeLabel} ${item.variant.size}\n   Cant: ${item.quantity} x S/ ${item.price} = S/ ${(item.price * item.quantity).toFixed(2)}\n`;
+              message += `▪️ ${item.name} | ${typeLabel} ${item.variant.size}\n   Cant: ${item.quantity} x S/ ${item.price} = S/ ${(item.price * item.quantity).toFixed(2)}\n`;
             });
             message += `\n*TOTAL A PAGAR: S/ ${total.toFixed(2)}*`;
             message += `\n\nQuedo atento para coordinar el pago y envío. ¡Gracias!`;
@@ -232,35 +242,40 @@
 
           return (
             <div className="fixed inset-0 z-50 flex justify-end">
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose}></div>
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] min-[1070px]:backdrop-blur-[2px] transition-opacity" onClick={onClose}></div>
               
-              <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-neutral-900 text-white">
+              <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right rounded-l-2xl sm:rounded-none min-[1070px]:rounded-none overflow-hidden min-[1070px]:overflow-visible">
+                <div className="p-5 sm:p-6 min-[1070px]:p-6 border-b border-gray-100 flex items-center justify-between bg-white min-[1070px]:bg-neutral-900 text-gray-900 min-[1070px]:text-white">
                   <div className="flex items-center gap-3">
-                     <ShoppingBag size={20} className="text-amber-500" />
-                     <h2 className="text-xl font-serif tracking-wide">Tu Pedido</h2>
+                     <div className="p-2 bg-amber-50 rounded-xl text-amber-600 min-[1070px]:bg-transparent min-[1070px]:p-0 min-[1070px]:text-amber-500 min-[1070px]:rounded-none">
+                        <ShoppingBag size={20} className="min-[1070px]:w-5 min-[1070px]:h-5" />
+                     </div>
+                     <h2 className="text-lg sm:text-xl min-[1070px]:text-xl font-serif font-bold min-[1070px]:font-normal tracking-wide">Tu Pedido</h2>
                   </div>
-                  <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+                  <button onClick={onClose} className="p-2 hover:bg-gray-100 min-[1070px]:hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-gray-900 min-[1070px]:hover:text-white">
                     <X size={24} />
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 min-[1070px]:p-6 space-y-5 min-[1070px]:space-y-6">
                   {cart.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
-                      <ShoppingBag size={64} className="opacity-20" />
-                      <p className="font-light">Tu carrito está esperando aromas increíbles.</p>
-                      <button onClick={onClose} className="text-amber-600 font-bold hover:underline text-sm uppercase tracking-widest">
+                      <ShoppingBag size={56} className="opacity-20 min-[1070px]:w-16 min-[1070px]:h-16" />
+                      <p className="font-light text-sm min-[1070px]:text-base text-center px-4">Tu carrito está esperando aromas increíbles.</p>
+                      <button onClick={onClose} className="mt-4 hidden min-[1070px]:block text-amber-600 font-bold hover:underline text-sm uppercase tracking-widest">
                         Volver al catálogo
                       </button>
+                      <Button variant="secondary" onClick={onClose} className="mt-4 min-[1070px]:hidden">
+                        Volver al catálogo
+                      </Button>
                     </div>
                   ) : (
                     cart.map((item) => (
-                      <div key={`${item.id}-${item.variant.id}`} className="flex gap-4 animate-in fade-in duration-300">
-                        <div className="relative w-20 h-24 flex-shrink-0 bg-gray-50 border border-gray-100 overflow-hidden">
+                      <div key={`${item.id}-${item.variant.id}`} className="flex gap-4 p-3 min-[1070px]:p-0 bg-gray-50 min-[1070px]:bg-transparent rounded-2xl min-[1070px]:rounded-none animate-in fade-in duration-300">
+                        <div className="relative w-20 h-24 flex-shrink-0 bg-white min-[1070px]:bg-gray-50 rounded-xl min-[1070px]:rounded-none border border-gray-100 overflow-hidden shadow-sm min-[1070px]:shadow-none">
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           {item.variant.type === 'bottle' && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-amber-600 text-white text-[9px] text-center py-0.5 font-bold uppercase">
+                            <div className="hidden min-[1070px]:block absolute bottom-0 left-0 right-0 bg-amber-600 text-white text-[9px] text-center py-0.5 font-bold uppercase">
                               Botella
                             </div>
                           )}
@@ -268,32 +283,32 @@
                         
                         <div className="flex-1 flex flex-col justify-between py-1">
                           <div>
-                            <h4 className="font-serif text-gray-900 leading-tight">{item.name}</h4>
-                            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">
-                              {item.variant.type === 'bottle' ? 'Botella Sellada' : 'Decant'} • {item.variant.size}
+                            <h4 className="font-serif text-sm min-[1070px]:text-base font-bold min-[1070px]:font-normal text-gray-900 leading-tight line-clamp-1 min-[1070px]:line-clamp-none">{item.name}</h4>
+                            <p className="text-[10px] min-[1070px]:text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium min-[1070px]:font-normal">
+                              {item.variant.type === 'bottle' ? 'Botella Sellada' : 'Decant'} • <span className="text-amber-600 font-bold min-[1070px]:text-gray-500 min-[1070px]:font-normal">{item.variant.size}</span>
                             </p>
                           </div>
                           
                           <div className="flex items-center justify-between mt-2">
-                            <span className="font-bold text-amber-700">S/ {(item.price * item.quantity).toFixed(2)}</span>
-                            <div className="flex items-center border border-gray-200 bg-gray-50">
+                            <span className="font-bold min-[1070px]:font-bold text-gray-900 min-[1070px]:text-amber-700 text-sm min-[1070px]:text-base">S/ {(item.price * item.quantity).toFixed(2)}</span>
+                            <div className="flex items-center bg-white min-[1070px]:bg-gray-50 rounded-lg min-[1070px]:rounded-none border border-gray-200 shadow-sm min-[1070px]:shadow-none overflow-hidden min-[1070px]:overflow-visible">
                               <button 
                                 onClick={() => updateQuantity(item.id, item.variant.id, -1)}
-                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 min-[1070px]:hover:bg-gray-200 active:bg-gray-100 transition-colors text-gray-600 min-[1070px]:text-gray-900"
                               >-</button>
-                              <span className="w-8 text-center text-xs font-medium">{item.quantity}</span>
+                              <span className="w-6 min-[1070px]:w-8 text-center text-xs font-bold min-[1070px]:font-medium text-gray-800 min-[1070px]:text-gray-900">{item.quantity}</span>
                               <button 
                                 onClick={() => updateQuantity(item.id, item.variant.id, 1)}
-                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                                className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 min-[1070px]:hover:bg-gray-200 active:bg-gray-100 transition-colors text-gray-600 min-[1070px]:text-gray-900"
                               >+</button>
                             </div>
                           </div>
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id, item.variant.id)}
-                          className="text-gray-300 hover:text-red-500 self-start p-1 transition-colors"
+                          className="text-gray-400 hover:text-red-500 self-start p-1.5 min-[1070px]:p-1 bg-white min-[1070px]:bg-transparent rounded-full min-[1070px]:rounded-none shadow-sm min-[1070px]:shadow-none border border-gray-100 min-[1070px]:border-transparent transition-colors min-[1070px]:text-gray-300"
                         >
-                          <X size={18} />
+                          <X size={14} className="min-[1070px]:w-[18px] min-[1070px]:h-[18px]" />
                         </button>
                       </div>
                     ))
@@ -301,18 +316,18 @@
                 </div>
 
                 {cart.length > 0 && (
-                  <div className="p-6 border-t border-gray-100 bg-gray-50">
+                  <div className="p-5 sm:p-6 min-[1070px]:p-6 bg-white min-[1070px]:bg-gray-50 border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] min-[1070px]:shadow-none">
                     <div className="flex justify-between items-center mb-1 text-sm text-gray-500">
                       <span>Subtotal</span>
                       <span>S/ {total.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center mb-6 text-xl font-serif text-gray-900 border-t border-gray-200 pt-3 mt-2 border-dashed">
+                    <div className="flex justify-between items-center mb-4 min-[1070px]:mb-6 text-base sm:text-lg min-[1070px]:text-xl font-serif text-gray-900 border-t border-gray-200 pt-3 mt-2 border-dashed">
                       <span>Total Estimado</span>
-                      <span className="font-bold">S/ {total.toFixed(2)}</span>
+                      <span className="font-bold min-[1070px]:font-bold text-xl min-[1070px]:text-xl">S/ {total.toFixed(2)}</span>
                     </div>
                     
-                    <Button onClick={handleCheckout} className="w-full py-4 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 text-white border-none">
-                      <Phone size={20} />
+                    <Button onClick={handleCheckout} className="w-full py-3.5 min-[1070px]:py-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white border-none shadow-lg shadow-green-600/30 min-[1070px]:shadow-lg min-[1070px]:shadow-green-900/20 rounded-xl min-[1070px]:rounded-none text-sm flex items-center justify-center gap-2">
+                      <Phone size={18} className="min-[1070px]:w-5 min-[1070px]:h-5" />
                       <span>Solicitar por WhatsApp</span>
                     </Button>
                     <p className="text-[10px] text-gray-400 mt-4 text-center mx-auto max-w-[250px]">
@@ -329,7 +344,6 @@
         function App() {
           const [cart, setCart] = useState([]);
           const [isCartOpen, setIsCartOpen] = useState(false);
-          // Para mostrar una notificación breve al agregar un producto sin abrir el carrito
           const [showAddToast, setShowAddToast] = useState(false);
           const [lastAddedName, setLastAddedName] = useState('');
           const [activeCategory, setActiveCategory] = useState('Todos');
@@ -350,15 +364,14 @@
             });
           }, [activeCategory, searchTerm, priceRange]);
 
-          // referencia al grid de productos para gestionar foco
           const productsGridRef = useRef(null);
 
-          // --- PAGINACIÓN ---
+          // Paginación
           const [currentPage, setCurrentPage] = useState(1);
-          const productsPerPage = 6;
+          // En escritorio original era 6, en móvil/tablet usamos 8 para mantener 2 columnas balanceadas
+          const productsPerPage = window.innerWidth < 1070 ? 8 : 6;
 
           useEffect(() => {
-            // resetear a la primera página cuando cambian los filtros/resultados
             setCurrentPage(1);
           }, [filteredProducts.length, activeCategory, searchTerm, priceRange]);
 
@@ -367,15 +380,12 @@
 
           const goToPage = (n) => setCurrentPage(Math.min(Math.max(1, n), totalPages));
 
-          // mantener el foco en la primera tarjeta cuando cambia la página o los resultados
           useEffect(() => {
-            // pequeño delay para esperar al renderizado del DOM
             const t = setTimeout(() => {
               const container = productsGridRef.current;
               if (!container) return;
               const firstCard = container.querySelector('[data-product-card]');
               if (firstCard) {
-                // permitir enfoque programático sin ser tabbable por defecto
                 firstCard.setAttribute('tabindex', '-1');
                 try { firstCard.focus({ preventScroll: false }); } catch(e) { firstCard.focus(); }
               }
@@ -396,10 +406,9 @@
               return [...prev, { ...product, variant, price: variant.price, quantity: 1 }];
             });
 
-            // No abrir el carrito automáticamente; mostrar una notificación breve
             setLastAddedName(product.name);
             setShowAddToast(true);
-            setTimeout(() => setShowAddToast(false), 1600);
+            setTimeout(() => setShowAddToast(false), 2000);
           };
 
           const removeFromCart = (productId, variantId) => {
@@ -417,26 +426,30 @@
           };
 
           return (
-            <div className="min-h-screen bg-white font-sans text-gray-800 selection:bg-amber-100 selection:text-amber-900">
+            <div className="min-h-screen bg-gray-50 sm:bg-white min-[1070px]:bg-white font-sans text-gray-800 selection:bg-amber-100 selection:text-amber-900 pb-20 sm:pb-0 min-[1070px]:pb-0">
+              
+              {/* Notificación Toast Flotante */}
               {showAddToast && (
-                <div className="fixed top-24 right-6 z-50 transform transition-all duration-300">
-                  <div className="bg-amber-600 text-white px-4 py-2 rounded shadow-md font-medium">
-                    Agregado al carrito: {lastAddedName}
+                <div className="fixed bottom-6 sm:bottom-auto sm:top-24 min-[1070px]:top-24 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto min-[1070px]:left-auto sm:right-6 min-[1070px]:right-6 z-[60] transform transition-all duration-300 w-[90%] sm:w-auto min-[1070px]:w-auto">
+                  <div className="bg-gray-900/95 min-[1070px]:bg-amber-600 min-[1070px]:border-none min-[1070px]:rounded backdrop-blur-md min-[1070px]:backdrop-blur-none text-white px-5 min-[1070px]:px-4 py-3 min-[1070px]:py-2 rounded-2xl shadow-2xl min-[1070px]:shadow-md font-medium text-sm flex min-[1070px]:block items-center justify-center sm:justify-start gap-3 border border-gray-700 min-[1070px]:gap-0">
+                    <div className="bg-green-500 rounded-full p-1 min-[1070px]:hidden"><ShoppingCart size={14} className="text-white"/></div>
+                    <span className="min-[1070px]:hidden">Agregado: <span className="font-bold text-amber-400">{lastAddedName}</span></span>
+                    <span className="hidden min-[1070px]:inline">Agregado al carrito: {lastAddedName}</span>
                   </div>
                 </div>
               )}
               
               {/* Navbar */}
-              <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+              <nav className="sticky top-0 z-40 bg-white/90 min-[1070px]:bg-white/95 backdrop-blur-xl min-[1070px]:backdrop-blur-md border-b border-gray-200 min-[1070px]:border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="flex justify-between items-center h-20">
-                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-                      <div className="bg-black text-white p-2 font-serif text-xl tracking-widest border border-amber-600 transition-transform group-hover:scale-105">
+                  <div className="flex justify-between items-center h-16 sm:h-20 min-[1070px]:h-20">
+                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
+                      <div className="bg-black text-white p-1.5 sm:p-2 min-[1070px]:p-2 font-serif text-lg sm:text-xl min-[1070px]:text-xl tracking-widest border border-amber-600 rounded-md min-[1070px]:rounded-none min-[1070px]:transition-transform min-[1070px]:group-hover:scale-105">
                         FE
                       </div>
-                      <div className="flex flex-col -space-y-1">
-                        <span className="font-serif text-xl tracking-wide uppercase">Fragancias</span>
-                        <span className="text-[10px] text-amber-600 tracking-[0.3em] font-bold uppercase text-right">Elegant’S</span>
+                      <div className="flex flex-col -space-y-0.5 sm:-space-y-1 min-[1070px]:-space-y-1">
+                        <span className="font-serif text-lg sm:text-xl min-[1070px]:text-xl tracking-wide uppercase font-bold min-[1070px]:font-normal text-gray-900 min-[1070px]:text-gray-900">Fragancias</span>
+                        <span className="text-[9px] sm:text-[10px] min-[1070px]:text-[10px] text-amber-600 tracking-[0.25em] min-[1070px]:tracking-[0.3em] font-bold uppercase text-right">Elegant’S</span>
                       </div>
                     </div>
 
@@ -446,27 +459,27 @@
                       <a href="#nosotros" className="hover:text-amber-600 transition-colors py-2">Nosotros</a>
                     </div>
 
-                    <div className="flex items-center gap-5">
-                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                         <Menu size={20} />
-                      </button>
-                      <div className="relative cursor-pointer group" onClick={() => setIsCartOpen(true)}>
-                        <ShoppingBag size={24} className="text-gray-800 group-hover:text-amber-600 transition-colors" />
+                    <div className="flex items-center gap-4 sm:gap-5 min-[1070px]:gap-5">
+                      <div className="relative cursor-pointer group bg-gray-100 sm:bg-transparent min-[1070px]:bg-transparent p-2 rounded-full sm:p-0 min-[1070px]:p-0" onClick={() => setIsCartOpen(true)}>
+                        <ShoppingBag size={22} className="text-gray-800 group-hover:text-amber-600 transition-colors min-[1070px]:w-6 min-[1070px]:h-6" />
                         {cart.length > 0 && (
-                          <span className="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm border border-white">
+                          <span className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 min-[1070px]:-top-1.5 min-[1070px]:-right-1.5 bg-amber-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-md min-[1070px]:shadow-sm border-2 min-[1070px]:border border-white">
                             {cart.reduce((a, b) => a + b.quantity, 0)}
                           </span>
                         )}
                       </div>
+                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden text-gray-800" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                         {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                      </button>
                     </div>
                   </div>
                 </div>
                 
                 {isMobileMenuOpen && (
-                  <div className="md:hidden bg-white border-b border-gray-100 p-4 space-y-4 animate-in slide-in-from-top duration-200">
-                    <a href="#" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Inicio</a>
-                    <a href="#catalogo" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Catálogo</a>
-                    <a href="#nosotros" className="block text-sm uppercase tracking-widest text-gray-600 font-bold">Nosotros</a>
+                  <div className="md:hidden bg-white border-b border-gray-100 px-4 py-6 space-y-5 animate-in slide-in-from-top duration-200 shadow-lg absolute w-full">
+                    <a href="#" onClick={()=>setIsMobileMenuOpen(false)} className="block text-sm uppercase tracking-widest text-gray-600 font-bold p-2 bg-gray-50 rounded-lg">Inicio</a>
+                    <a href="#catalogo" onClick={()=>setIsMobileMenuOpen(false)} className="block text-sm uppercase tracking-widest text-gray-600 font-bold p-2 bg-gray-50 rounded-lg">Catálogo</a>
+                    <a href="#nosotros" onClick={()=>setIsMobileMenuOpen(false)} className="block text-sm uppercase tracking-widest text-gray-600 font-bold p-2 bg-gray-50 rounded-lg">Nosotros</a>
                   </div>
                 )}
               </nav>
@@ -474,35 +487,30 @@
               {/* Hero Section */}
               <div className="relative bg-neutral-900 text-white py-24 sm:py-36 overflow-hidden">
                 <div className="absolute inset-0">
-                     {/* Video de fondo: coloca el archivo de video en ./assets/hero.mp4 o ajusta la ruta */}
                      <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
                        <source src="video.mp4" type="video/mp4" />
                        Tu navegador no soporta video.
                      </video>
-
-                     {/* Capa oscura para mantener legibilidad del texto */}
                      <div className="absolute inset-0 bg-black/45"></div>
-
-                     {/* Formas decorativas opcionales (se mantienen sobre el video, debajo del contenido) */}
                      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-600/10 rounded-full blur-[100px] transform translate-x-1/3 -translate-y-1/3"></div>
                      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-900/20 rounded-full blur-[100px] transform -translate-x-1/3 translate-y-1/3"></div>
                   </div>
                 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-                  <div className="inline-block mb-6 px-4 py-1 border border-white/20 rounded-full bg-white/5 backdrop-blur-sm">
-                    <p className="text-amber-400 text-xs font-bold uppercase tracking-[0.2em]">Envíos a todo el Perú</p>
+                  <div className="inline-block mb-4 sm:mb-6 min-[1070px]:mb-6 px-4 py-1.5 min-[1070px]:py-1 border border-white/20 rounded-full bg-white/10 min-[1070px]:bg-white/5 backdrop-blur-md min-[1070px]:backdrop-blur-sm">
+                    <p className="text-amber-400 text-[10px] sm:text-xs min-[1070px]:text-xs font-bold uppercase tracking-[0.2em]">Envíos a todo el Perú</p>
                   </div>
-                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-medium mb-8 leading-tight tracking-tight">
+                  <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-medium min-[1070px]:font-medium mb-6 sm:mb-8 min-[1070px]:mb-8 leading-tight tracking-tight px-2 min-[1070px]:px-0">
                     Aromas que <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600 italic pr-2">definen</span>
                   </h1>
-                  <p className="text-gray-400 max-w-2xl mx-auto mb-12 text-lg font-light leading-relaxed">
+                  <p className="text-gray-300 min-[1070px]:text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-12 min-[1070px]:mb-12 text-sm sm:text-lg min-[1070px]:text-lg font-light leading-relaxed px-4 min-[1070px]:px-0">
                     Especialistas en <b>decants</b> y botellas de alta perfumería. Experimenta el lujo de Rasasi, Armani y Lattafa sin compromisos.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button variant="primary" className="!px-8 !py-4 !text-sm" onClick={() => document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth'})}>
+                  <div className="flex flex-col sm:flex-row min-[1070px]:flex-row gap-3 sm:gap-4 min-[1070px]:gap-4 justify-center px-6 min-[1070px]:px-0">
+                    <Button variant="primary" className="!px-8 !py-3.5 sm:!py-4 min-[1070px]:!py-4 shadow-lg shadow-amber-600/30 min-[1070px]:shadow-none" onClick={() => document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth'})}>
                       Ver Catálogo
                     </Button>
-                    <Button variant="outline" className="!px-8 !py-4 !text-sm border-white/30 hover:border-white">
+                    <Button variant="outline" className="!px-8 !py-3.5 sm:!py-4 min-[1070px]:!py-4 border-white/30 hover:border-white">
                       Conocer Más
                     </Button>
                   </div>
@@ -510,40 +518,42 @@
               </div>
 
               {/* Main Content */}
-              <main id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+              <main id="catalogo" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-10 sm:py-20 min-[1070px]:py-20 scroll-mt-20">
                 
-                <div className="flex flex-col lg:flex-row gap-16">
+                <div className="flex flex-col lg:flex-row min-[1070px]:flex-row gap-8 sm:gap-16 min-[1070px]:gap-16">
                   {/* Sidebar Filters */}
-                  <aside className="w-full lg:w-64 space-y-10">
+                  <aside className="w-full lg:w-64 min-[1070px]:w-64 space-y-6 sm:space-y-10 min-[1070px]:space-y-10 bg-white p-5 sm:p-0 min-[1070px]:p-0 rounded-2xl min-[1070px]:rounded-none shadow-sm sm:shadow-none min-[1070px]:shadow-none border border-gray-100 sm:border-transparent min-[1070px]:border-transparent min-[1070px]:bg-transparent">
                     <div>
-                      <h3 className="text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-100 pb-2">
-                        <Filter size={16} /> Filtros
+                      <h3 className="text-sm font-bold uppercase tracking-widest mb-4 sm:mb-6 min-[1070px]:mb-6 flex items-center gap-2 border-b border-gray-100 pb-3 min-[1070px]:pb-2 text-gray-900">
+                        <Filter size={18} className="text-amber-600 min-[1070px]:hidden" /> 
+                        <Filter size={16} className="hidden min-[1070px]:block" /> 
+                        Filtros
                       </h3>
                       
-                      <div className="mb-8">
+                      <div className="mb-6 sm:mb-8 min-[1070px]:mb-8">
                         <div className="relative">
                           <input 
                             type="text" 
                             placeholder="Buscar perfume..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 focus:border-amber-600 focus:bg-white focus:outline-none text-sm transition-all"
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 sm:bg-white min-[1070px]:bg-gray-50 border border-gray-200 min-[1070px]:border-gray-100 rounded-xl min-[1070px]:rounded-none focus:border-amber-600 min-[1070px]:focus:bg-white focus:ring-2 focus:ring-amber-600/20 min-[1070px]:focus:ring-0 focus:outline-none text-sm transition-all"
                           />
-                          <Search size={16} className="absolute left-3 top-3.5 text-gray-400" />
+                          <Search size={16} className="absolute left-3.5 min-[1070px]:left-3 top-3.5 text-gray-400" />
                         </div>
                       </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-6 min-[1070px]:space-y-6">
                         <div>
-                          <h4 className="font-serif text-lg text-gray-900 mb-4">Categorías</h4>
-                          <ul className="space-y-3">
+                          <h4 className="font-serif text-base sm:text-lg min-[1070px]:text-lg font-bold min-[1070px]:font-normal text-gray-900 mb-3 sm:mb-4 min-[1070px]:mb-4">Categorías</h4>
+                          <ul className="flex flex-wrap lg:flex-col min-[1070px]:flex-col gap-2 sm:gap-3 min-[1070px]:gap-0 min-[1070px]:space-y-3">
                             {categories.map(cat => (
                               <li key={cat}>
                                 <button 
                                   onClick={() => setActiveCategory(cat)}
-                                  className={`text-sm transition-all duration-200 flex items-center gap-2 ${activeCategory === cat ? 'text-amber-600 font-bold translate-x-2' : 'text-gray-500 hover:text-gray-900'}`}
+                                  className={`text-xs sm:text-sm min-[1070px]:text-sm transition-all duration-200 flex items-center gap-2 px-3 py-2 min-[1070px]:px-0 min-[1070px]:py-0 rounded-lg min-[1070px]:rounded-none border min-[1070px]:border-none ${activeCategory === cat ? 'bg-amber-50 min-[1070px]:bg-transparent border-amber-200 min-[1070px]:border-transparent text-amber-700 min-[1070px]:text-amber-600 font-bold min-[1070px]:translate-x-2' : 'bg-white min-[1070px]:bg-transparent border-gray-200 min-[1070px]:border-transparent text-gray-600 hover:text-gray-900'}`}
                                 >
-                                  <span className={`w-1.5 h-1.5 rounded-full ${activeCategory === cat ? 'bg-amber-600' : 'bg-gray-300'}`}></span>
+                                  <span className={`hidden min-[1070px]:block w-1.5 h-1.5 rounded-full ${activeCategory === cat ? 'bg-amber-600' : 'bg-gray-300'}`}></span>
                                   {cat}
                                 </button>
                               </li>
@@ -551,12 +561,12 @@
                           </ul>
                         </div>
 
-                        <div>
-                          <h4 className="font-serif text-lg text-gray-900 mb-4">Precio Máximo</h4>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <div className="flex justify-between text-xs font-bold text-gray-900 mb-2">
+                        <div className="pt-4 border-t border-gray-100 sm:border-transparent min-[1070px]:border-transparent sm:pt-0 min-[1070px]:pt-0">
+                          <h4 className="font-serif text-base sm:text-lg min-[1070px]:text-lg font-bold min-[1070px]:font-normal text-gray-900 mb-3 sm:mb-4 min-[1070px]:mb-4">Precio Máximo</h4>
+                          <div className="bg-gray-50 p-4 rounded-xl min-[1070px]:rounded-none border border-gray-100 min-[1070px]:border-transparent">
+                            <div className="flex justify-between text-xs font-bold text-gray-900 mb-3 min-[1070px]:mb-2">
                               <span>S/ 20</span>
-                              <span>S/ {priceRange}</span>
+                              <span className="text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md min-[1070px]:bg-transparent min-[1070px]:px-0 min-[1070px]:text-gray-900">S/ {priceRange}</span>
                             </div>
                             <input 
                               type="range" 
@@ -567,7 +577,7 @@
                               onChange={(e) => setPriceRange(parseInt(e.target.value))}
                               className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
                             />
-                            <p className="text-[10px] text-gray-400 mt-2 text-center">Desliza para ajustar presupuesto</p>
+                            <p className="hidden min-[1070px]:block text-[10px] text-gray-400 mt-2 text-center">Desliza para ajustar presupuesto</p>
                           </div>
                         </div>
                       </div>
@@ -576,19 +586,19 @@
 
                   {/* Product Grid */}
                   <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row justify-between items-end mb-10 border-b border-gray-100 pb-6 gap-4">
+                    <div className="flex flex-col sm:flex-row min-[1070px]:flex-row justify-between items-start sm:items-end min-[1070px]:items-end mb-6 sm:mb-10 min-[1070px]:mb-10 border-b border-gray-200 min-[1070px]:border-gray-100 pb-4 sm:pb-6 min-[1070px]:pb-6 gap-3 min-[1070px]:gap-4">
                       <div>
-                        <h2 className="text-4xl font-serif text-gray-900 mb-2">Colección</h2>
-                        <p className="text-gray-500 text-sm">Explora nuestra selección curada de fragancias.</p>
+                        <h2 className="text-2xl sm:text-4xl min-[1070px]:text-4xl font-serif font-bold min-[1070px]:font-normal text-gray-900 mb-1 sm:mb-2 min-[1070px]:mb-2">Colección</h2>
+                        <p className="text-gray-500 text-xs sm:text-sm min-[1070px]:text-sm">Explora nuestra selección curada de fragancias.</p>
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest bg-gray-100 px-3 py-1 text-gray-600 rounded-full">
+                      <span className="text-[10px] sm:text-xs min-[1070px]:text-xs font-bold uppercase tracking-widest bg-amber-50 min-[1070px]:bg-gray-100 text-amber-700 min-[1070px]:text-gray-600 px-3 py-1.5 min-[1070px]:py-1 rounded-lg min-[1070px]:rounded-full border border-amber-100 min-[1070px]:border-transparent">
                         {filteredProducts.length} Productos
                       </span>
                     </div>
 
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div ref={productsGridRef} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+                      <div ref={productsGridRef} className="grid grid-cols-2 md:grid-cols-3 min-[1070px]:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6 min-[1070px]:gap-x-8 min-[1070px]:gap-y-12">
                         {paginatedProducts.map(product => (
                           <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
                         ))}
@@ -596,29 +606,28 @@
 
                       {/* Controles de paginación */}
                       {totalPages > 1 && (
-                        <div className="mt-8 flex items-center justify-center gap-2">
-                          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 bg-gray-100 rounded disabled:opacity-50">Anterior</button>
+                        <div className="mt-10 sm:mt-12 min-[1070px]:mt-8 flex items-center justify-center gap-1.5 sm:gap-2 min-[1070px]:gap-2">
+                          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 sm:px-4 min-[1070px]:px-3 py-2 min-[1070px]:py-1 bg-white min-[1070px]:bg-gray-100 border border-gray-200 min-[1070px]:border-transparent text-sm font-medium rounded-xl min-[1070px]:rounded disabled:opacity-40 min-[1070px]:disabled:opacity-50 shadow-sm min-[1070px]:shadow-none">«</button>
                           {Array.from({ length: totalPages }).map((_, i) => {
                             const page = i + 1;
                             return (
-                              <button key={page} onClick={() => goToPage(page)} className={`px-3 py-1 rounded ${currentPage === page ? 'bg-amber-600 text-white' : 'bg-white border border-gray-200'}`}>
+                              <button key={page} onClick={() => goToPage(page)} className={`min-[1070px]:px-3 min-[1070px]:py-1 min-[1070px]:w-auto min-[1070px]:h-auto w-10 h-10 flex items-center justify-center rounded-xl min-[1070px]:rounded font-bold min-[1070px]:font-normal text-sm shadow-sm min-[1070px]:shadow-none transition-colors ${currentPage === page ? 'bg-amber-600 text-white shadow-amber-600/30 min-[1070px]:shadow-none' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
                                 {page}
                               </button>
                             );
                           })}
-                          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 bg-gray-100 rounded disabled:opacity-50">Siguiente</button>
+                          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 sm:px-4 min-[1070px]:px-3 py-2 min-[1070px]:py-1 bg-white min-[1070px]:bg-gray-100 border border-gray-200 min-[1070px]:border-transparent text-sm font-medium rounded-xl min-[1070px]:rounded disabled:opacity-40 min-[1070px]:disabled:opacity-50 shadow-sm min-[1070px]:shadow-none">»</button>
                         </div>
                       )}
                       </>
                     ) : (
-                      <div className="text-center py-32 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        <Search size={48} className="mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-lg font-serif text-gray-900 mb-2">No se encontraron resultados</h3>
-                        <p className="text-gray-500 text-sm mb-6">Intenta ajustar los filtros o el rango de precio.</p>
+                      <div className="text-center py-20 sm:py-32 min-[1070px]:py-32 bg-white sm:bg-gray-50 min-[1070px]:bg-gray-50 rounded-2xl min-[1070px]:rounded-xl border border-dashed border-gray-200 shadow-sm min-[1070px]:shadow-none">
+                        <Search size={40} className="mx-auto text-gray-300 mb-4 min-[1070px]:w-12 min-[1070px]:h-12" />
+                        <h3 className="text-base sm:text-lg min-[1070px]:text-lg font-serif font-bold min-[1070px]:font-normal text-gray-900 mb-2">No se encontraron resultados</h3>
+                        <p className="text-gray-500 text-xs sm:text-sm min-[1070px]:text-sm mb-6 px-4">Intenta ajustar la búsqueda o el rango de precio.</p>
                         <Button 
                           onClick={() => {setActiveCategory('Todos'); setSearchTerm(''); setPriceRange(500);}}
                           variant="ghost"
-                          className="text-xs"
                         >
                           Limpiar Filtros
                         </Button>
@@ -631,20 +640,20 @@
               {/* Features Banner */}
               <section className="bg-black text-white py-20 border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 min-[1070px]:gap-12 text-center">
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-2xl min-[1070px]:rounded-none">
                       <Star className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
-                      <h3 className="text-xl font-serif mb-3">Autenticidad 100%</h3>
+                      <h3 className="text-xl font-serif mb-3 font-bold min-[1070px]:font-normal">Autenticidad 100%</h3>
                       <p className="text-gray-400 text-sm leading-relaxed">Cada gota proviene directamente de la botella original. Sin adulteraciones, pura esencia.</p>
                     </div>
-                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-2xl min-[1070px]:rounded-none">
                       <ShoppingBag className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
-                      <h3 className="text-xl font-serif mb-3">Compra Simplificada</h3>
+                      <h3 className="text-xl font-serif mb-3 font-bold min-[1070px]:font-normal">Compra Simplificada</h3>
                       <p className="text-gray-400 text-sm leading-relaxed">Olvídate de registros largos. Elige tus aromas y coordina todo rápidamente por WhatsApp.</p>
                     </div>
-                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-none">
+                    <div className="group p-8 border border-white/5 hover:border-amber-600/50 bg-white/5 hover:bg-white/10 transition-all duration-500 rounded-2xl min-[1070px]:rounded-none">
                       <Package className="w-12 h-12 text-amber-500 mx-auto mb-6 group-hover:scale-110 transition-transform" />
-                      <h3 className="text-xl font-serif mb-3">Decants & Botellas</h3>
+                      <h3 className="text-xl font-serif mb-3 font-bold min-[1070px]:font-normal">Decants & Botellas</h3>
                       <p className="text-gray-400 text-sm leading-relaxed">Desde muestras de 5ml para probar, hasta la botella completa para tu colección personal.</p>
                     </div>
                   </div>
@@ -652,15 +661,15 @@
               </section>
 
               {/* Footer */}
-              <footer id="nosotros" className="bg-neutral-900 text-white border-t border-white/10 pt-20 pb-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+              <footer id="nosotros" className="bg-neutral-900 text-white pt-16 pb-24 sm:pb-10 min-[1070px]:pb-10 min-[1070px]:pt-20 rounded-t-[2rem] sm:rounded-none min-[1070px]:rounded-none mt-2 sm:mt-10 min-[1070px]:mt-0 border-t border-white/10">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-10 min-[1070px]:gap-12 mb-12 min-[1070px]:mb-16">
                     <div className="md:col-span-2">
-                      <div className="flex items-center gap-2 mb-6">
-                        <div className="bg-white text-black p-1 font-serif text-sm tracking-widest border border-amber-500">FE</div>
-                        <span className="font-serif text-xl tracking-wide uppercase">Fragancias Elegant’S</span>
+                      <div className="flex items-center gap-2 mb-4 min-[1070px]:mb-6">
+                        <div className="bg-white text-black p-1.5 min-[1070px]:p-1 font-serif text-sm tracking-widest rounded min-[1070px]:rounded-none min-[1070px]:border min-[1070px]:border-amber-500">FE</div>
+                        <span className="font-serif text-lg min-[1070px]:text-xl tracking-wide uppercase font-bold min-[1070px]:font-normal">Fragancias Elegant’S</span>
                       </div>
-                      <p className="text-gray-400 text-sm leading-relaxed max-w-md mb-8">
+                      <p className="text-gray-400 text-sm leading-relaxed max-w-sm min-[1070px]:max-w-md mb-6 min-[1070px]:mb-8">
                         Nacimos con la misión de hacer la alta perfumería accesible. Creemos que cada persona merece encontrar ese aroma que la define, sin necesidad de invertir en una botella completa a ciegas.
                       </p>
                       <div className="flex gap-4">
@@ -670,17 +679,17 @@
                     </div>
                     
                     <div>
-                      <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-amber-500">Explorar</h4>
-                      <ul className="space-y-4 text-sm text-gray-400">
+                      <h4 className="text-xs min-[1070px]:text-sm font-bold uppercase tracking-widest mb-5 min-[1070px]:mb-6 text-amber-500">Explorar</h4>
+                      <ul className="space-y-3 min-[1070px]:space-y-4 text-sm text-gray-400">
                         <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Inicio</a></li>
                         <li><a href="#catalogo" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Catálogo</a></li>
                         <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2"><span className="w-1 h-1 bg-amber-500 rounded-full"></span>Nuestras Marcas</a></li>
                       </ul>
                     </div>
-                    
+
                     <div>
-                      <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-amber-500">Contacto</h4>
-                      <ul className="space-y-4 text-sm text-gray-400">
+                      <h4 className="text-xs min-[1070px]:text-sm font-bold uppercase tracking-widest mb-5 min-[1070px]:mb-6 text-amber-500">Contacto</h4>
+                      <ul className="space-y-3 min-[1070px]:space-y-4 text-sm text-gray-400">
                         <li className="flex items-start gap-3">
                           <Phone size={18} className="mt-0.5 text-amber-600"/> 
                           <span>+51 978 292 305<br/><span className="text-xs text-gray-500">Lun - Sab, 9am - 8pm</span></span>
@@ -693,9 +702,9 @@
                     </div>
                   </div>
                   
-                  <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+                  <div className="border-t border-white/10 pt-6 min-[1070px]:pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] sm:text-xs min-[1070px]:text-xs text-gray-500 gap-4 min-[1070px]:gap-0">
                     <p>&copy; 2024 Fragancias Elegant’S. Todos los derechos reservados.</p>
-                    <div className="flex gap-6 mt-4 md:mt-0">
+                    <div className="flex gap-6 mt-2 md:mt-0 min-[1070px]:mt-0">
                       <a href="#" className="hover:text-white">Privacidad</a>
                       <a href="#" className="hover:text-white">Términos</a>
                     </div>
@@ -703,6 +712,7 @@
                 </div>
               </footer>
 
+              {/* Drawer de Carrito */}
               <CartDrawer 
                 isOpen={isCartOpen} 
                 onClose={() => setIsCartOpen(false)} 
@@ -710,6 +720,20 @@
                 removeFromCart={removeFromCart}
                 updateQuantity={updateQuantity}
               />
+              
+              {/* Botón Flotante de Carrito MÓVIL (Oculto en >=1070px) */}
+              <button 
+                onClick={() => setIsCartOpen(true)}
+                className="md:hidden min-[1070px]:hidden fixed bottom-6 right-6 bg-amber-600 text-white p-4 rounded-full shadow-xl shadow-amber-600/30 z-40 active:scale-90 transition-transform flex items-center justify-center"
+              >
+                <ShoppingBag size={24} />
+                {cart.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-black text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-amber-600">
+                    {cart.reduce((a, b) => a + b.quantity, 0)}
+                  </span>
+                )}
+              </button>
+
             </div>
           );
         }

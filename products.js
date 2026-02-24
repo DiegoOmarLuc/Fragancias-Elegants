@@ -221,7 +221,7 @@ const products = [
     notes: "Notas: Bergamota, Notas Verdes, Melón, Piña, Notas Dulces, Ámbar, Almizcle, Vainilla, Maderas.",
     price5: 25, 
     price10: 35, 
-    imgUrl: "https://arabia.com.co/cdn/shop/files/arabia-al-haramain-amber-oud-bleu-edition-edp-262539.png?v=1717747445",
+    imgUrl: "https://www.myperfumeshop.co.nz/cdn/shop/files/Al_Haramain_Amber_Oud_Gold_Edition_EDP_-_Google_Search_-_217.jpg?v=1682575041&width=500",
     imgColor: "#d4af37",
     accordBars: [
         { name: "Dulce", color: "#f39c12", width: 100 },

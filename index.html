@@ -380,18 +380,10 @@
 
           const goToPage = (n) => setCurrentPage(Math.min(Math.max(1, n), totalPages));
 
-          useEffect(() => {
-            const t = setTimeout(() => {
-              const container = productsGridRef.current;
-              if (!container) return;
-              const firstCard = container.querySelector('[data-product-card]');
-              if (firstCard) {
-                firstCard.setAttribute('tabindex', '-1');
-                try { firstCard.focus({ preventScroll: false }); } catch(e) { firstCard.focus(); }
-              }
-            }, 40);
-            return () => clearTimeout(t);
-          }, [currentPage, filteredProducts.length, activeCategory]);
+          // Eliminado el scroll automático al catálogo en móvil
+          // useEffect que hacía focus/scroll al primer producto
+          // Si necesitas el scroll en escritorio, puedes agregarlo condicionalmente
+          // Por ahora, lo eliminamos completamente para evitar el salto en móvil
 
           const addToCart = (product, variant) => {
             setCart(prev => {

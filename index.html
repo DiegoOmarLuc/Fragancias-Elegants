@@ -59,22 +59,33 @@
         import { ShoppingBag, X, Search, Filter, Star, Phone, Instagram, Facebook, Tag, Package, Menu } from 'lucide-react';
 
         // --- TRANSFORMAR PRODUCTOS AL FORMATO DEL CATÁLOGO ---
-        const CATALOG_DATABASE = window.products.map((product, index) => ({
-          id: `product-${product.id}`,
-          name: product.name,
-          brand: product.house,
-          category: product.category || "Árabes",
-          tags: product.soldOut ? ["VENDIDO"] : [],
-          description: product.description,
-          image: product.imgUrl,
-          soldOut: product.soldOut || false,
-          variants: [
-            ...(product.price3 ? [{ id: `var-${product.id}-3ml`, size: "3ml", label: "3ml", price: product.price3, type: "decant" }] : []),
-            ...(product.price5 ? [{ id: `var-${product.id}-5ml`, size: "5ml", label: "5ml", price: product.price5, type: "decant" }] : []),
-            ...(product.price10 ? [{ id: `var-${product.id}-10ml`, size: "10ml", label: "10ml", price: product.price10, type: "decant" }] : []),
-            ...(product.pricefull ? [{ id: `var-${product.id}-full`, size: "full", label: "Botella Completa 🍾", price: product.pricefull, type: "bottle" }] : []),
-          ]
-        }));
+        const CATALOG_DATABASE = window.products.map((product, index) => {
+          // construir variantes respetando precios 0 (hasOwnProperty)
+          const variants = [];
+          if (product.hasOwnProperty('price3')) variants.push({ id: `var-${product.id}-3ml`, size: "3ml", label: "3ml", price: product.price3, type: "decant" });
+          if (product.hasOwnProperty('price5')) variants.push({ id: `var-${product.id}-5ml`, size: "5ml", label: "5ml", price: product.price5, type: "decant" });
+          if (product.hasOwnProperty('price10')) variants.push({ id: `var-${product.id}-10ml`, size: "10ml", label: "10ml", price: product.price10, type: "decant" });
+          if (product.hasOwnProperty('pricefull')) variants.push({ id: `var-${product.id}-full`, size: "full", label: "Botella Completa 🍾", price: product.pricefull, type: "bottle" });
+
+          // si es comingSoon y no tiene variantes, añadir placeholder para evitar errores en la UI
+          if ((product.comingSoon || false) && variants.length === 0) {
+            variants.push({ id: `var-${product.id}-soon`, size: "-", label: "Próximamente", price: 0, type: "decant" });
+          }
+
+          return {
+            id: `product-${product.id}`,
+            name: product.name,
+            brand: product.house,
+            category: product.category || "Árabes",
+            // soporta etiquetas dinámicas: VENDIDO y PRÓXIMAMENTE
+            tags: [ ...(product.soldOut ? ["VENDIDO"] : []), ...(product.comingSoon ? ["PRÓXIMAMENTE"] : []) ],
+            comingSoon: product.comingSoon || false,
+            description: product.description,
+            image: product.imgUrl,
+            soldOut: product.soldOut || false,
+            variants
+          };
+        });
 
         // --- COMPONENTES UI ---
 
@@ -101,19 +112,27 @@
             setSelectedVariant(product.variants[0]);
           }, [product]);
 
+          const isDisabled = product.soldOut || product.comingSoon;
+
           return (
             <div className="group bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden animate-in fade-in"
-              style={product.soldOut ? { opacity: 0.6, pointerEvents: 'none' } : {}}>
+              style={product.soldOut ? { opacity: 0.6, pointerEvents: 'none' } : (product.comingSoon ? { opacity: 0.85 } : {})}>
               {/* Etiquetas (Tags) */}
               <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
                 <span className="bg-black text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
                   {product.category}
                 </span>
-                {product.tags.includes('VENDIDO') && (
-                  <span className="bg-red-600 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">
-                    Vendido
-                  </span>
-                )}
+                {product.tags.map((t) => {
+                  if (t === 'VENDIDO') return (
+                    <span key={t} className="bg-red-600 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">Vendido</span>
+                  );
+                  if (t === 'PRÓXIMAMENTE' || t === 'PROXIMAMENTE' || t === 'PRÓXIMO') return (
+                    <span key={t} className="bg-amber-500 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">Próximamente</span>
+                  );
+                  return (
+                    <span key={t} className="bg-gray-800 text-white text-[10px] px-2 py-1 uppercase tracking-widest font-bold">{t}</span>
+                  );
+                })}
               </div>
 
               {/* Imagen */}
@@ -151,8 +170,8 @@
                         return (
                           <button
                             key={v.id}
-                            onClick={() => !product.soldOut && setSelectedVariant(v)}
-                            disabled={product.soldOut}
+                            onClick={() => !isDisabled && setSelectedVariant(v)}
+                            disabled={isDisabled}
                             title={`${isBottle ? 'Botella' : 'Decant'} ${v.label}`}
                             className={`
                               px-3 py-1.5 text-[11px] uppercase tracking-widest border transition-all duration-200 rounded-none
@@ -177,13 +196,13 @@
                       <span key={selectedVariant.id} className="text-xl font-serif font-medium text-gray-900 animate-in fade-in">S/ {selectedVariant.price.toFixed(2)}</span>
                     </div>
                     <Button 
-                      onClick={() => !product.soldOut && onAddToCart(product, selectedVariant)}
-                      disabled={product.soldOut}
-                      title={product.soldOut ? 'Producto vendido' : 'Agregar al carrito'}
+                      onClick={() => !isDisabled && onAddToCart(product, selectedVariant)}
+                      disabled={isDisabled}
+                      title={product.soldOut ? 'Producto vendido' : (product.comingSoon ? 'Próximamente' : 'Agregar al carrito')}
                       className="!px-5 !py-2.5 text-xs flex items-center gap-2 shadow-sm hover:shadow-md transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                     >
                       <ShoppingBag size={14} />
-                      {product.soldOut ? 'Vendido' : 'Agregar'}
+                      {product.soldOut ? 'Vendido' : (product.comingSoon ? 'Próximamente' : 'Agregar')}
                     </Button>
                   </div>
                 </div>
@@ -310,6 +329,9 @@
         function App() {
           const [cart, setCart] = useState([]);
           const [isCartOpen, setIsCartOpen] = useState(false);
+          // Para mostrar una notificación breve al agregar un producto sin abrir el carrito
+          const [showAddToast, setShowAddToast] = useState(false);
+          const [lastAddedName, setLastAddedName] = useState('');
           const [activeCategory, setActiveCategory] = useState('Todos');
           const [priceRange, setPriceRange] = useState(200); 
           const [searchTerm, setSearchTerm] = useState("");
@@ -328,6 +350,20 @@
             });
           }, [activeCategory, searchTerm, priceRange]);
 
+          // --- PAGINACIÓN ---
+          const [currentPage, setCurrentPage] = useState(1);
+          const productsPerPage = 6;
+
+          useEffect(() => {
+            // resetear a la primera página cuando cambian los filtros/resultados
+            setCurrentPage(1);
+          }, [filteredProducts.length, activeCategory, searchTerm, priceRange]);
+
+          const totalPages = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage));
+          const paginatedProducts = filteredProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
+
+          const goToPage = (n) => setCurrentPage(Math.min(Math.max(1, n), totalPages));
+
           const addToCart = (product, variant) => {
             setCart(prev => {
               const existing = prev.find(item => item.id === product.id && item.variant.id === variant.id);
@@ -340,7 +376,11 @@
               }
               return [...prev, { ...product, variant, price: variant.price, quantity: 1 }];
             });
-            setIsCartOpen(true);
+
+            // No abrir el carrito automáticamente; mostrar una notificación breve
+            setLastAddedName(product.name);
+            setShowAddToast(true);
+            setTimeout(() => setShowAddToast(false), 1600);
           };
 
           const removeFromCart = (productId, variantId) => {
@@ -359,6 +399,13 @@
 
           return (
             <div className="min-h-screen bg-white font-sans text-gray-800 selection:bg-amber-100 selection:text-amber-900">
+              {showAddToast && (
+                <div className="fixed top-24 right-6 z-50 transform transition-all duration-300">
+                  <div className="bg-amber-600 text-white px-4 py-2 rounded shadow-md font-medium">
+                    Agregado al carrito: {lastAddedName}
+                  </div>
+                </div>
+              )}
               
               {/* Navbar */}
               <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -408,9 +455,19 @@
               {/* Hero Section */}
               <div className="relative bg-neutral-900 text-white py-24 sm:py-36 overflow-hidden">
                 <div className="absolute inset-0">
-                   <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-600/10 rounded-full blur-[100px] transform translate-x-1/3 -translate-y-1/3"></div>
-                   <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-900/20 rounded-full blur-[100px] transform -translate-x-1/3 translate-y-1/3"></div>
-                </div>
+                     {/* Video de fondo: coloca el archivo de video en ./assets/hero.mp4 o ajusta la ruta */}
+                     <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
+                       <source src="video.mp4" type="video/mp4" />
+                       Tu navegador no soporta video.
+                     </video>
+
+                     {/* Capa oscura para mantener legibilidad del texto */}
+                     <div className="absolute inset-0 bg-black/45"></div>
+
+                     {/* Formas decorativas opcionales (se mantienen sobre el video, debajo del contenido) */}
+                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-600/10 rounded-full blur-[100px] transform translate-x-1/3 -translate-y-1/3"></div>
+                     <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-900/20 rounded-full blur-[100px] transform -translate-x-1/3 translate-y-1/3"></div>
+                  </div>
                 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
                   <div className="inline-block mb-6 px-4 py-1 border border-white/20 rounded-full bg-white/5 backdrop-blur-sm">
@@ -511,11 +568,29 @@
                     </div>
 
                     {filteredProducts.length > 0 ? (
+                      <>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
-                        {filteredProducts.map(product => (
+                        {paginatedProducts.map(product => (
                           <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
                         ))}
                       </div>
+
+                      {/* Controles de paginación */}
+                      {totalPages > 1 && (
+                        <div className="mt-8 flex items-center justify-center gap-2">
+                          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 bg-gray-100 rounded disabled:opacity-50">Anterior</button>
+                          {Array.from({ length: totalPages }).map((_, i) => {
+                            const page = i + 1;
+                            return (
+                              <button key={page} onClick={() => goToPage(page)} className={`px-3 py-1 rounded ${currentPage === page ? 'bg-amber-600 text-white' : 'bg-white border border-gray-200'}`}>
+                                {page}
+                              </button>
+                            );
+                          })}
+                          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 bg-gray-100 rounded disabled:opacity-50">Siguiente</button>
+                        </div>
+                      )}
+                      </>
                     ) : (
                       <div className="text-center py-32 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                         <Search size={48} className="mx-auto text-gray-300 mb-4" />

@@ -115,7 +115,7 @@ const products = [
     //     ]
     // },
     // { 
-    //     id: 8, 
+    //     id: 7, 
     //     name: "Vintage Radio", 
     //     house: "Lattafa",
     //     category: "Árabes",
@@ -211,7 +211,69 @@ const products = [
             { name: "Amaderado", color: "#5d4037", width: 70 },
             { name: "Tabaco", color: "#34495e", width: 60 }
         ]
+    },
+    { 
+    id: 13, 
+    name: "Amber Oud Gold Edition", 
+    house: "Al Haramain",
+    category: "Árabes",
+    description: "Un cóctel frutal y dulce que evoluciona hacia un fondo cálido y envolvente. Elegante, luminoso y con gran presencia.",
+    notes: "Notas: Bergamota, Notas Verdes, Melón, Piña, Notas Dulces, Ámbar, Almizcle, Vainilla, Maderas.",
+    price5: 25, 
+    price10: 35, 
+    imgUrl: "https://arabia.com.co/cdn/shop/files/arabia-al-haramain-amber-oud-bleu-edition-edp-262539.png?v=1717747445",
+    imgColor: "#d4af37",
+    accordBars: [
+        { name: "Dulce", color: "#f39c12", width: 100 },
+        { name: "Frutal", color: "#27ae60", width: 90 },
+        { name: "Ámbar", color: "#d35400", width: 80 },
+        { name: "Vainilla", color: "#f1c40f", width: 75 },
+        { name: "Amaderado", color: "#5d4037", width: 60 }
+    ]
+    },
+    {
+        id: 14,
+        name: "Asad Elixir",
+        house: "Lattafa",
+        category: "Árabes",
+        description: "Una fragancia intensa y sofisticada, con un carácter especiado y oriental que se funde con notas dulces y amaderadas. Poderosa y envolvente, ideal para ocasiones especiales.",
+        notes: "Notas: Pimienta negra, Tabaco, Vainilla, Ámbar, Sándalo, Oud.",
+        price5: 0,
+        price10: 0,
+        comingSoon: true,
+        imgUrl: "https://img.ltwebstatic.com/v4/j/spmp/2026/01/15/2e/17684609464863ebd9f901869751bc93a3d06f3a50_thumbnail_900x.webp",
+        imgColor: "#4b2e2e",
+        accordBars: [
+            { name: "Especiado", color: "#c0392b", width: 95 },
+            { name: "Amaderado", color: "#5d4037", width: 85 },
+            { name: "Ámbar", color: "#d35400", width: 80 },
+            { name: "Dulce", color: "#f39c12", width: 70 },
+            { name: "Oriental", color: "#8e44ad", width: 65 }
+        ]
+    },
+    {
+    id: 15,
+    name: "Hawas Tropical",
+    house: "Rasasi",
+    category: "Árabes",
+    description: "Un estallido fresco y jugoso de frutas tropicales que se mezcla con notas acuáticas y un fondo almizclado. Vibrante, juvenil y perfecto para climas cálidos.",
+    notes: "Notas: Mango, Piña, Papaya, Notas Acuáticas, Almizcle, Ámbar.",
+    price5: 0,
+    price10: 0,
+    comingSoon: true,
+    imgUrl: "https://samawa.ae/cdn/shop/files/Hawas_Tropical_1200x1200.jpg?v=1751954222",
+    imgColor: "#00b894",
+    accordBars: [
+        { name: "Frutal", color: "#27ae60", width: 100 },
+        { name: "Acuático", color: "#3498db", width: 90 },
+        { name: "Dulce", color: "#f39c12", width: 75 },
+        { name: "Ámbar", color: "#d35400", width: 65 },
+        { name: "Almizclado", color: "#7f8c8d", width: 60 }
+    ]
     }
+
+
+
 ];
 
 window.products = products;

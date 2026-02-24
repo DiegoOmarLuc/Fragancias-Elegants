@@ -54,7 +54,7 @@
 
     <script src="./products.js?v=20260224"></script>
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useMemo } from 'react';
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
         import { ShoppingBag, X, Search, Filter, Star, Phone, Instagram, Facebook, Tag, Package, Menu } from 'lucide-react';
 
@@ -114,8 +114,8 @@
 
           const isDisabled = product.soldOut || product.comingSoon;
 
-          return (
-            <div className="group bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden animate-in fade-in"
+            return (
+            <div data-product-card className="group bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full relative overflow-hidden animate-in fade-in"
               style={product.soldOut ? { opacity: 0.6, pointerEvents: 'none' } : (product.comingSoon ? { opacity: 0.85 } : {})}>
               {/* Etiquetas (Tags) */}
               <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
@@ -350,6 +350,9 @@
             });
           }, [activeCategory, searchTerm, priceRange]);
 
+          // referencia al grid de productos para gestionar foco
+          const productsGridRef = useRef(null);
+
           // --- PAGINACIÓN ---
           const [currentPage, setCurrentPage] = useState(1);
           const productsPerPage = 6;
@@ -363,6 +366,22 @@
           const paginatedProducts = filteredProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
 
           const goToPage = (n) => setCurrentPage(Math.min(Math.max(1, n), totalPages));
+
+          // mantener el foco en la primera tarjeta cuando cambia la página o los resultados
+          useEffect(() => {
+            // pequeño delay para esperar al renderizado del DOM
+            const t = setTimeout(() => {
+              const container = productsGridRef.current;
+              if (!container) return;
+              const firstCard = container.querySelector('[data-product-card]');
+              if (firstCard) {
+                // permitir enfoque programático sin ser tabbable por defecto
+                firstCard.setAttribute('tabindex', '-1');
+                try { firstCard.focus({ preventScroll: false }); } catch(e) { firstCard.focus(); }
+              }
+            }, 40);
+            return () => clearTimeout(t);
+          }, [currentPage, filteredProducts.length, activeCategory]);
 
           const addToCart = (product, variant) => {
             setCart(prev => {
@@ -569,7 +588,7 @@
 
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+                      <div ref={productsGridRef} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
                         {paginatedProducts.map(product => (
                           <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
                         ))}

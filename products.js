@@ -270,7 +270,28 @@ const products = [
         { name: "Ámbar", color: "#d35400", width: 65 },
         { name: "Almizclado", color: "#7f8c8d", width: 60 }
     ]
-    }
+    },
+    {
+    id: 16,
+    name: "Yara Pink",
+    house: "Lattafa",
+    category: "Árabes",
+    description: "Una fragancia femenina, delicada y encantadora. Combina notas frutales suaves con un corazón floral cremoso y un fondo dulce y reconfortante. Perfecta para quienes buscan elegancia juvenil y dulzura envolvente.",
+    notes: "Notas: Frutas rojas, Frambuesa, Rosa, Jazmín, Vainilla, Almizcle, Sándalo.",
+    price5: 0,
+    price10: 0,
+    comingSoon: true,
+    imgUrl: "https://privateblends.com.au/cdn/shop/files/yara-lattafa-pink-middle-eastern-perfumes-australia-private-blends_2.jpg?v=1695193487&width=1400",
+    imgColor: "#ff69b4",
+    accordBars: [
+        { name: "Dulce", color: "#f39c12", width: 95 },
+        { name: "Frutal", color: "#e74c3c", width: 85 },
+        { name: "Floral", color: "#9b59b6", width: 80 },
+        { name: "Almizclado", color: "#7f8c8d", width: 65 },
+        { name: "Amaderado", color: "#5d4037", width: 55 }
+    ]
+}
+
 
 
 
